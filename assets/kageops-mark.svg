@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none" role="img" aria-label="KageOps">
+  <!--
+    KageOps · Mark C · Kanji-fold (CANONICAL)
+    Source: docs/design_pack/wave-2-mission-control/design-system/preview/Brand Mark + Loader.html
+    Slate strokes + moss-green accent foot triangle.
+    Transparent background — embed anywhere.
+  -->
+  <path d="M14 16 L34 16 L34 32 L18 32" stroke="#b8bcc8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 22 L30 22"                stroke="#b8bcc8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40 14 L40 44 M44 18 L48 14 M44 30 L48 26 M44 42 L48 38" stroke="#b8bcc8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 40 L34 40 L28 50 Z" fill="#5BB377"/>
+</svg>

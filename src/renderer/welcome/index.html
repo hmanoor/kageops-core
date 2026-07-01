@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:;" />
+    <title>Welcome to KageOps</title>
+    <link rel="stylesheet" href="welcome.css" />
+</head>
+<body>
+    <div class="shell">
+        <!-- Titlebar drag region -->
+        <div class="titlebar">
+            <div class="tb-brand">
+                <svg class="tb-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                    <g stroke="#b8bcc8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" vector-effect="non-scaling-stroke">
+                        <path d="M14 16 L34 16 L34 32 L18 32"/>
+                        <path d="M22 22 L30 22"/>
+                        <path d="M40 14 L40 44"/>
+                        <path d="M44 18 L48 14"/>
+                        <path d="M44 30 L48 26"/>
+                        <path d="M44 42 L48 38"/>
+                    </g>
+                    <path d="M22 40 L34 40 L28 50 Z" fill="#5BB377"/>
+                </svg>
+                <span class="tb-title">KageOps</span>
+            </div>
+            <button class="tb-close" id="btn-close" aria-label="Close">&#x2715;</button>
+        </div>
+
+        <div class="scroll-area">
+            <!-- Hero -->
+            <section class="hero">
+                <svg class="hero-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                    <g stroke="#5BB377" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" vector-effect="non-scaling-stroke">
+                        <path d="M14 16 L34 16 L34 32 L18 32"/>
+                        <path d="M22 22 L30 22"/>
+                        <path d="M40 14 L40 44"/>
+                        <path d="M44 18 L48 14"/>
+                        <path d="M44 30 L48 26"/>
+                        <path d="M44 42 L48 38"/>
+                    </g>
+                    <path d="M22 40 L34 40 L28 50 Z" fill="#5BB377"/>
+                </svg>
+                <div class="hero-text">
+                    <h1 class="hero-title">Welcome to KageOps</h1>
+                    <p class="hero-sub">Your multi-agent AI orchestration platform. Let your team of AI agents take ideas from concept to shipped product.</p>
+                    <p class="hero-version" id="version-badge">v2.7</p>
+                </div>
+            </section>
+
+            <!-- Feature Cards -->
+            <section class="section">
+                <h2 class="section-title">What KageOps can do</h2>
+                <div class="card-grid" id="feature-grid"></div>
+            </section>
+
+            <!-- How-to -->
+            <section class="section">
+                <h2 class="section-title">Get started in 3 steps</h2>
+                <div class="howto-list" id="howto-list"></div>
+            </section>
+
+            <!-- What's New -->
+            <section class="section">
+                <h2 class="section-title">What's new in <span id="whats-new-version"></span></h2>
+                <ul class="news-list" id="news-list"></ul>
+            </section>
+
+            <!-- Footer actions -->
+            <div class="footer-actions">
+                <label class="dont-show">
+                    <input type="checkbox" id="chk-dont-show" />
+                    <span>Don't show this on startup</span>
+                </label>
+                <div class="footer-btns">
+                    <button class="btn-outline" id="btn-docs">Read the docs</button>
+                    <button class="btn-primary" id="btn-got-it">Got it, let's go</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="welcome.js"></script>
+</body>
+</html>

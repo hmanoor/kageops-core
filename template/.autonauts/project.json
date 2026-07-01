@@ -1,0 +1,14 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "description": "{{PROJECT_DESCRIPTION}}",
+  "version": "0.1.0",
+  "created": "{{CREATED_DATE}}",
+  "phase": "discovery",
+  "trustLevel": "low",
+  "autonomousAfterDesign": false,
+  "tags": [],
+  "team": {
+    "orchestrator": "sensei",
+    "agents": ["scout", "blueprint", "pixel", "forge", "cipher", "aegis", "vigil", "herald"]
+  }
+}

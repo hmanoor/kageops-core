@@ -1,0 +1,341 @@
+/* ═══════════════════════════════════════════════════════════════
+   Interactive Shell Panel — inline terminal with per-command spawn.
+
+   Class prefix: .ishell-*
+   Token-driven; matches the agent-terminal aesthetic.
+   ═════════════════════════════════════════════════════════════ */
+
+.ishell-host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface-sunken);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    overflow: hidden;
+}
+
+/* ── Toolbar ────────────────────────────────────────── */
+
+.ishell-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-bottom: var(--border-width) solid var(--border-color);
+    background: var(--surface-raised);
+    flex-shrink: 0;
+}
+
+.ishell-cwd {
+    flex: 1;
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ishell-btn {
+    background: transparent;
+    border: var(--border-width) solid var(--border-color);
+    color: var(--text-muted);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.ishell-btn:hover {
+    background: var(--surface-tint-soft);
+    color: var(--text);
+    border-color: var(--border-color-strong);
+}
+
+.ishell-btn--kill:hover {
+    color: oklch(0.78 0.16 25);
+    border-color: oklch(0.78 0.16 25 / 0.32);
+}
+
+/* ── Shell tabs (Bash | PowerShell) ─────────────────── */
+
+.ishell-shell-tabs {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.ishell-shell-tab {
+    background: transparent;
+    border: var(--border-width) solid var(--border-color);
+    color: var(--text-muted);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.ishell-shell-tab:hover {
+    background: var(--surface-tint-soft);
+    color: var(--text);
+    border-color: var(--border-color-strong);
+}
+
+.ishell-shell-tab--active {
+    background: var(--accent-muted);
+    color: var(--accent);
+    border-color: var(--accent-ring);
+}
+
+/* ── Idle splash ─────────────────────────────────────── */
+
+.ishell-idle {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--surface-sunken);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.ishell-idle[hidden] { display: none; }
+
+.ishell-idle-svg {
+    width: 56px;
+    height: 56px;
+    opacity: 0.65;
+}
+
+/* ── Shell picker — legacy, kept for fallback ─────────── */
+
+.ishell-picker-wrap {
+    display: none;
+    position: relative;
+}
+
+.ishell-picker-btn {
+    background: var(--surface-tint-faint);
+    border: var(--border-width) solid var(--border-color);
+    color: var(--text);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.ishell-picker-btn:hover {
+    background: var(--surface-tint-soft);
+    border-color: var(--border-color-strong);
+}
+
+.ishell-picker-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--surface-raised);
+    border: var(--border-width) solid var(--border-color-strong);
+    border-radius: var(--radius);
+    padding: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    z-index: 10;
+    min-width: 140px;
+}
+
+.ishell-picker-menu[hidden] {
+    display: none;
+}
+
+.ishell-picker-item {
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    text-align: left;
+    transition: background 120ms ease;
+}
+
+.ishell-picker-item:hover {
+    background: var(--surface-tint-soft);
+}
+
+.ishell-picker-item--active {
+    background: var(--accent-muted);
+    color: var(--accent);
+}
+
+/* ── Viewport ───────────────────────────────────────── */
+
+.ishell-viewport {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    cursor: text;
+    background: var(--surface-sunken);
+}
+
+.ishell-scrollback {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Lines ──────────────────────────────────────────── */
+
+.ishell-line,
+.ishell-line--echo,
+.ishell-line--system,
+.ishell-line--loading {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+}
+
+.ishell-line--echo {
+    color: var(--accent);
+}
+
+.ishell-line--system {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.ishell-line--stderr {
+    color: oklch(0.78 0.16 25);
+}
+
+.ishell-line--loading {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-subtle);
+}
+
+.ishell-spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--border-color-strong);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: ishell-spin 800ms linear infinite;
+}
+
+@keyframes ishell-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ishell-spinner { animation-duration: 2400ms; }
+}
+
+.ishell-loading-text {
+    color: var(--text-muted);
+}
+
+/* ── Active input row (visually part of the stream) ─── */
+
+.ishell-active-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+}
+
+.ishell-prompt {
+    color: var(--accent);
+    user-select: none;
+    font-family: var(--font-mono);
+}
+
+.ishell-input {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    caret-color: var(--accent);
+    padding: 0;
+}
+
+.ishell-input-mirror {
+    position: absolute;
+    visibility: hidden;
+    white-space: pre;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+}
+
+/* ── Slash-command palette ──────────────────────────── */
+
+.ishell-cmd-palette {
+    margin-top: var(--space-3);
+    background: var(--surface-raised);
+    border: var(--border-width) solid var(--border-color-strong);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+.ishell-cmd-palette[hidden] {
+    display: none;
+}
+
+.ishell-cmd-palette__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 120ms ease;
+}
+
+.ishell-cmd-palette__item:hover,
+.ishell-cmd-palette__item--selected {
+    background: var(--surface-tint-soft);
+}
+
+.ishell-cmd-palette__label {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+}
+
+.ishell-cmd-palette__desc {
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+}

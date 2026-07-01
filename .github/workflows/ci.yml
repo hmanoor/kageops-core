@@ -1,0 +1,84 @@
+name: KageOps Core CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Stop in-flight builds if a new push arrives
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so gitleaks can scan commits
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Belt: the home-grown scanner over all tracked files (same one the
+      # pre-commit hook runs).
+      - name: Home-grown secret scan (all tracked files)
+        run: npm run secret-scan:all
+      # Suspenders: gitleaks for entropy + full-history detection. We invoke the
+      # OSS gitleaks CLI directly (MIT-licensed, free); it auto-loads
+      # .gitleaks.toml from the repo root.
+      - name: gitleaks (OSS CLI — full history)
+        env:
+          GITLEAKS_VERSION: 8.18.4
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --redact --config .gitleaks.toml --exit-code 1
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Verify clean compile
+        run: npx tsc --noEmit
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Configure git identity for tests that commit
+        run: |
+          git config --global user.email "ci@kageops.local"
+          git config --global user.name "KageOps CI"
+      - run: npm test
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check TypeScript strict mode
+        run: npx tsc --noEmit --strict

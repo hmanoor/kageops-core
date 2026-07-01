@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>KageOps brand assets — preview before upload</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #1a1a1a; color: #e8e8e8; padding: 48px; }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  p.lede { color: #9d9d9d; margin-bottom: 32px; max-width: 60ch; line-height: 1.55; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .card { border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; }
+  .card h2 { font-size: 13px; padding: 12px 16px; background: #0f0f0f; border-bottom: 1px solid #2a2a2a; color: #d4d4d4; font-weight: 600; }
+  .card .canvas { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
+  .canvas-light { background: #fafafa; }
+  .canvas-dark  { background: #0f0f0f; }
+  .canvas-card  { background: #ffffff; }
+  .card .meta { padding: 12px 16px; font-size: 11px; color: #9d9d9d; background: #0f0f0f; border-top: 1px solid #2a2a2a; font-family: "SF Mono", "Cascadia Code", "Consolas", monospace; }
+  img { max-width: 60%; max-height: 60%; }
+  img.fav { width: 64px; height: 64px; }
+</style>
+</head>
+<body>
+  <h1>KageOps brand assets — upload preview</h1>
+  <p class="lede">All four files for the Clerk dashboard. Each is shown on the background it's optimised for. The mark itself (Mark C · Kanji-fold) is identical across all four — only stroke colour and tile background change.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Logo · light background</h2>
+      <div class="canvas canvas-light"><img src="kageops-logo-light-bg.svg" alt="KageOps logo, dark strokes"/></div>
+      <div class="meta">kageops-logo-light-bg.svg → Clerk · Logo (default)</div>
+    </div>
+
+    <div class="card">
+      <h2>Logo · dark background</h2>
+      <div class="canvas canvas-dark"><img src="kageops-logo-dark-bg.svg" alt="KageOps logo, light strokes"/></div>
+      <div class="meta">kageops-logo-dark-bg.svg → Clerk · Logo (dark)</div>
+    </div>
+
+    <div class="card">
+      <h2>Favicon · dark tile</h2>
+      <div class="canvas canvas-card"><img class="fav" src="kageops-favicon.svg" alt="KageOps favicon dark tile"/></div>
+      <div class="meta">kageops-favicon.svg → Clerk · Favicon</div>
+    </div>
+
+    <div class="card">
+      <h2>Favicon · light tile</h2>
+      <div class="canvas canvas-card"><img class="fav" src="kageops-favicon-light.svg" alt="KageOps favicon light tile"/></div>
+      <div class="meta">kageops-favicon-light.svg → optional alt</div>
+    </div>
+  </div>
+</body>
+</html>

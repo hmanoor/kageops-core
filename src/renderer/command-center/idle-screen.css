@@ -1,0 +1,77 @@
+/* ═══════════════════════════════════════════════════════════════
+   Idle Screen — branded empty/welcome state with rotating tip card.
+
+   Class prefix: .idle-screen, .idle-screen__*
+   ═════════════════════════════════════════════════════════════ */
+
+.idle-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-7);
+    padding: var(--space-9) var(--space-7);
+    color: var(--text);
+    font-family: var(--font-sans);
+    text-align: center;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* ── Brand block ────────────────────────────────────── */
+
+.idle-screen__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.idle-screen__loader-svg {
+    width: 64px;
+    height: 64px;
+    color: var(--accent);
+}
+
+.idle-screen__stroke {
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.2;
+    opacity: 0.7;
+}
+
+.idle-screen__stroke--accent {
+    fill: var(--accent);
+    stroke: none;
+}
+
+.idle-screen__wordmark {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--text);
+}
+
+.idle-screen__tagline {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    max-width: 360px;
+    line-height: 1.5;
+}
+
+/* ── Tip line (replaces card + dots) ────────────────── */
+
+.idle-screen__tip {
+    font-size: var(--text-sm);
+    font-weight: 300;
+    color: var(--text-muted);
+    opacity: 0.35;
+    max-width: 380px;
+    line-height: 1.5;
+    text-align: center;
+    transition: opacity var(--transition-fast, 200ms) ease;
+}

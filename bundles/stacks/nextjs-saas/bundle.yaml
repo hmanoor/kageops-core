@@ -1,0 +1,292 @@
+schemaVersion: 1
+name: nextjs-saas
+kind: stack
+version: "0.1.0"
+# Bundle is being authored during 0.3.x; first end-to-end use lands in v0.4.0
+# per D-19. Range stays wide so the bundle remains loadable across the iteration
+# window. Bump the lower bound once a 0.4.x feature becomes a hard dependency.
+# Upper bound widened to <0.6.0 for the v0.5.0 line (Pillar 2.4/2.5 added no
+# bundle-breaking changes); the <0.5.0 cap silently un-loaded every bundle at
+# 0.5.0 — caught by the release test gate.
+kageops_version: ">=0.3.0 <0.6.0"
+description: |
+  Production-grade Next.js 16 SaaS application — App Router + Server Components,
+  Clerk auth, Neon Postgres (Vercel Marketplace) via Drizzle ORM, Stripe payments,
+  shadcn/ui components, Vitest + Playwright. Deploys to Vercel via
+  `vercel deploy --prebuilt` (see bundles/deployers/vercel — lands in P2-04).
+  The default stack for any brief that names a paid product, web app, dashboard,
+  or anything that needs auth + DB + payments on a Next.js footing.
+
+match:
+  phrases:
+    - "next.js"
+    - "nextjs"
+    - "next 16"
+    - "saas"
+    - "web app"
+    - "dashboard"
+    - "subscription"
+    - "paywall"
+    - "stripe checkout"
+    - "user accounts"
+    - "sign in"
+    - "sign up"
+    - "auth"
+    - "login"
+    - "with database"
+    - "with payments"
+    - "server actions"
+    - "app router"
+    - "react server components"
+  tags:
+    - nextjs
+    - react
+    - typescript
+    - tailwind
+    - shadcn
+    - clerk
+    - neon
+    - drizzle
+    - stripe
+    - vercel
+    - saas
+    - server-components
+    - app-router
+  rejectPhrases:
+    - "no framework"
+    - "no build step"
+    - "pure html"
+    - "vanilla html"
+    - "static html"
+    - "no javascript framework"
+    - "single page html"
+    - "expo"
+    - "react native"
+    # BPF-39: explicit NO-backend / NO-auth / NO-payments signals. This bundle
+    # ships Clerk auth + a Stripe checkout+webhook + a database. A brief that
+    # disclaims those must NOT get this scaffold — otherwise it inherits payment
+    # code that the payment-integrity acceptance check then (correctly) flags on
+    # an app that never wanted payments (the Prism mismatch). Such briefs fall
+    # to the inline scaffold path instead.
+    - "no sign-in"
+    - "no sign in"
+    - "no authentication"
+    - "no auth"
+    - "no accounts"
+    - "zero accounts"
+    - "no database"
+    - "no backend"
+    - "no api routes"
+    - "client-side only"
+    - "fully client-side"
+    - "no payments"
+    - "mobile app"
+    - "native ios"
+    - "native android"
+    - "fastapi"
+    - "django"
+    - "python backend"
+    - "rails"
+    - "express only"
+    - "node server only"
+    - "chrome extension"
+    - "browser extension"
+
+prompts:
+  forge_create_ui: prompts/forge-create-ui.md
+  forge_implement_feature: prompts/forge-implement-feature.md
+
+scaffold:
+  files:
+    - scaffold/.env.example
+    - scaffold/.gitignore
+    - scaffold/.vercelignore
+    - scaffold/README.md
+    - scaffold/SETUP.md
+    - scaffold/AGENTS.md
+    - scaffold/components.json
+    - scaffold/drizzle.config.ts
+    # Committed baseline migration (users + memberships, Clerk-keyed, no
+    # passwords). Ships so the agent extends it (db:generate → 0001_…) instead
+    # of hand-writing a broken 0000. Passes the G6 fresh-DB apply gate.
+    - scaffold/drizzle/0000_init.sql
+    - scaffold/drizzle/meta/_journal.json
+    - scaffold/drizzle/meta/0000_snapshot.json
+    - scaffold/middleware.ts
+    - scaffold/next.config.ts
+    - scaffold/package.json
+    - scaffold/playwright.config.ts
+    - scaffold/postcss.config.mjs
+    - scaffold/tailwind.config.ts
+    - scaffold/tsconfig.json
+    - scaffold/vitest.config.ts
+    - scaffold/app/globals.css
+    - scaffold/app/layout.tsx
+    - scaffold/app/page.tsx
+    - scaffold/app/membership/page.tsx
+    - "scaffold/app/(protected)/members/page.tsx"
+    - scaffold/app/api/stripe/webhook/route.ts
+    - "scaffold/app/(auth)/sign-in/[[...sign-in]]/page.tsx"
+    - "scaffold/app/(auth)/sign-up/[[...sign-up]]/page.tsx"
+    - scaffold/components/ui/button.tsx
+    - scaffold/lib/utils.ts
+    - scaffold/lib/stripe.ts
+    - scaffold/lib/db/index.ts
+    - scaffold/lib/db/schema.ts
+    - scaffold/lib/payments/checkout-params.ts
+    - scaffold/lib/payments/checkout.ts
+    - scaffold/lib/payments/webhook-handlers.ts
+    - scaffold/lib/payments/membership-repo.ts
+    - scaffold/tests/setup.ts
+    - scaffold/tests/utils.test.ts
+    - scaffold/tests/membership.test.ts
+    - scaffold/tests/e2e/homepage.spec.ts
+
+# BPF-30 — features this scaffold ALREADY ships fully wired. The decomposer
+# drops development tasks that merely re-implement these (a weak model rebuilds
+# them as broken duplicates: a redundant checkout route importing a non-existent
+# helper, a clobbered webhook with no handler, broken auth pages). Customisation
+# tasks (landing copy, domain tables, new feature pages) don't match these
+# phrases and are kept. Phrases are lower-cased substrings matched against a
+# task's title+description; keep them specific to BUILDING the shipped infra.
+shipped_features:
+  - label: "Stripe checkout (Server Action, lib/payments/checkout.ts)"
+    phrases:
+      - "checkout route"
+      - "checkout api"
+      - "checkout endpoint"
+      - "create checkout"
+      - "implement checkout"
+      - "build checkout"
+      - "stripe checkout session"
+      - "checkout session endpoint"
+  - label: "Stripe webhook handler (app/api/stripe/webhook/route.ts)"
+    phrases:
+      - "stripe webhook"
+      - "webhook handler"
+      - "webhook route"
+      - "webhook endpoint"
+      - "handle stripe events"
+  - label: "Clerk authentication + sign-in/sign-up pages"
+    phrases:
+      - "integrate clerk"
+      - "set up clerk"
+      - "setup clerk"
+      - "configure clerk"
+      - "clerk authentication"
+      - "clerk auth"
+      - "sign-in page"
+      - "sign in page"
+      - "sign-up page"
+      - "sign up page"
+      - "authentication flow"
+  - label: "Database client (lib/db) + membership schema"
+    phrases:
+      - "database client"
+      - "db client"
+      - "drizzle client"
+      - "prisma client"
+      - "create src/db"
+      - "set up database client"
+      - "database connection module"
+
+# BPF-31 — well-formed PLACEHOLDER values used ONLY for credential-free build
+# verification. Clerk's <ClerkProvider> (root layout) throws "Missing
+# publishableKey" during static prerender without a syntactically-valid key, so
+# even a perfect app fails `next build` with no env. These fill ONLY keys the
+# operator hasn't supplied (real deployment_config always wins) and are NEVER
+# used for a real deploy. The Clerk publishable key must be a valid format
+# (base64 of "<domain>$"); the rest just need to be present + well-shaped.
+build_env_placeholders:
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
+  CLERK_SECRET_KEY: "sk_test_buildplaceholderbuildplaceholder01"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_buildplaceholder"
+  STRIPE_SECRET_KEY: "sk_test_buildplaceholder"
+  DATABASE_URL: "postgres://build:build@localhost:5432/build?sslmode=disable"
+
+build:
+  skip_npm: false
+  framework_label: "Next.js (App Router)"
+
+acceptance:
+  kind: build-tests-preview
+  preview_routes:
+    - /sign-in
+    - /sign-up
+  required_test_pass_rate: 1.0
+
+# P2.2-01 / D-C — Deployment configuration declaration.
+# Drives the New-Project modal's Deployment Configuration section.
+# Bundle author declares vars once; modal renders fields + [Get →]/[Docs ↗]
+# deep links auto from the URLs below (D-L). Setup checklist (D-M) sources
+# its "Create an account" steps from provider_help + each var's signup_url.
+deployment:
+  provider: vercel
+  provider_help:
+    signup_url: "https://vercel.com/signup"
+    token_url: "https://vercel.com/account/tokens"
+    docs_url: "https://vercel.com/docs/cli/tokens"
+    token_scope: "Full Account (read+write) — needed for vercel deploy --prebuilt"
+  required_env:
+    - key: DATABASE_URL
+      label: "Neon database URL"
+      help: "Postgres connection string. Neon free tier is 0.5 GB — plenty for a first deploy."
+      secret: true
+      signup_url: "https://console.neon.tech/signup"
+      dashboard_url: "https://console.neon.tech"
+      docs_url: "https://neon.tech/docs/connect/connect-from-any-app"
+      format_hint: "postgres://user:pass@…neon.tech/dbname?sslmode=require"
+      format_regex: "^postgres(ql)?://.+@.+/.+$"
+    - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+      label: "Clerk publishable key"
+      help: "Safe to embed in client code. Starts with pk_test_ in dev mode."
+      signup_url: "https://dashboard.clerk.com/sign-up"
+      dashboard_url: "https://dashboard.clerk.com/last-active?path=api-keys"
+      docs_url: "https://clerk.com/docs/quickstarts/nextjs"
+      format_hint: "pk_test_..."
+      format_regex: "^pk_(test|live)_[A-Za-z0-9]+$"
+    - key: CLERK_SECRET_KEY
+      label: "Clerk secret key"
+      help: "Server-only. Starts with sk_test_ in dev mode. Never commit this."
+      secret: true
+      dashboard_url: "https://dashboard.clerk.com/last-active?path=api-keys"
+      docs_url: "https://clerk.com/docs/quickstarts/nextjs"
+      format_hint: "sk_test_..."
+      format_regex: "^sk_(test|live)_[A-Za-z0-9]+$"
+    - key: STRIPE_SECRET_KEY
+      label: "Stripe test secret key"
+      help: "Use a TEST key (sk_test_…). Live keys are blocked by KageOps on dev briefs."
+      secret: true
+      signup_url: "https://dashboard.stripe.com/register"
+      dashboard_url: "https://dashboard.stripe.com/test/apikeys"
+      docs_url: "https://stripe.com/docs/keys"
+      format_hint: "sk_test_..."
+      format_regex: "^sk_test_[A-Za-z0-9]+$"
+    - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+      label: "Stripe publishable key"
+      help: "Test mode publishable key. Safe to embed in client code."
+      dashboard_url: "https://dashboard.stripe.com/test/apikeys"
+      docs_url: "https://stripe.com/docs/keys"
+      format_hint: "pk_test_..."
+      format_regex: "^pk_test_[A-Za-z0-9]+$"
+  optional_env:
+    - key: STRIPE_WEBHOOK_SECRET
+      label: "Stripe webhook secret"
+      help: "Needed for the membership webhook (checkout → activation). Capture it when you register the webhook (returned once). Skip for an auth-only first deploy."
+      secret: true
+      dashboard_url: "https://dashboard.stripe.com/test/webhooks"
+      docs_url: "https://stripe.com/docs/webhooks/signatures"
+      format_hint: "whsec_..."
+      format_regex: "^whsec_[A-Za-z0-9]+$"
+    - key: STRIPE_PRICE_ID
+      label: "Stripe membership Price ID"
+      help: "The recurring Price the membership checkout subscribes to. Create a Product + Price in Stripe, paste its id. The amount lives in Stripe — never hardcoded in app copy."
+      dashboard_url: "https://dashboard.stripe.com/test/products"
+      docs_url: "https://stripe.com/docs/products-prices/how-products-and-prices-work"
+      format_hint: "price_..."
+      format_regex: "^price_[A-Za-z0-9]+$"
+    - key: NEXT_PUBLIC_APP_URL
+      label: "Deployed app URL"
+      help: "The deployed origin (e.g. https://your-app.vercel.app), used to build Stripe Checkout success/cancel URLs. Set after the first deploy gives you a URL."
+      format_hint: "https://your-app.vercel.app"
+      format_regex: "^https?://.+"

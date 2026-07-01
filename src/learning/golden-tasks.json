@@ -1,0 +1,81 @@
+{
+    "$comment": "Held-out task corpus for APO live-eval (B-471 follow-up). Each agent ships 6 tasks chosen to exercise the agent's core skill without hitting external tools or requiring large context. Kept short (one-sentence descriptions) so per-task cost stays under ~$0.005 on a budget model. Edit these to tune what APO optimizes toward — beam search only rewards behavior the corpus captures.",
+    "scout": [
+        {
+            "id": "scout.market-1",
+            "description": "In one paragraph, compare the go-to-market strategy of Stripe vs Adyen for SMB payments."
+        },
+        {
+            "id": "scout.competitive-1",
+            "description": "List the three biggest threats an incumbent CRM faces from AI-native startups launched in 2025."
+        },
+        {
+            "id": "scout.sizing-1",
+            "description": "Estimate the 2027 TAM for AI-generated marketing copy aimed at B2B SaaS companies. Show the arithmetic."
+        },
+        {
+            "id": "scout.persona-1",
+            "description": "Draft a one-paragraph buyer persona for a platform engineer evaluating internal developer platforms."
+        },
+        {
+            "id": "scout.trend-1",
+            "description": "Name three concrete product shifts the rise of on-device LLM inference will drive in consumer apps by 2027."
+        },
+        {
+            "id": "scout.risk-1",
+            "description": "List the top two regulatory risks for a US-based company shipping an AI voice-clone feature in the EU."
+        }
+    ],
+    "herald": [
+        {
+            "id": "herald.launch-1",
+            "description": "Write a 3-sentence launch announcement for a new automated invoice-reconciliation feature aimed at finance teams."
+        },
+        {
+            "id": "herald.email-1",
+            "description": "Draft a 60-word upgrade-nudge email for free-tier users who have hit their monthly quota three months in a row."
+        },
+        {
+            "id": "herald.headline-1",
+            "description": "Give three alternative headlines for a landing page selling real-time collaborative document editing to legal teams."
+        },
+        {
+            "id": "herald.positioning-1",
+            "description": "In 2 sentences, position a new incident-response tool against PagerDuty for a technical founder audience."
+        },
+        {
+            "id": "herald.social-1",
+            "description": "Write a LinkedIn post (under 120 words) announcing a Series B funding round for an AI DevOps startup."
+        },
+        {
+            "id": "herald.tagline-1",
+            "description": "Propose five taglines for a privacy-first analytics product targeting small e-commerce stores."
+        }
+    ],
+    "pixel": [
+        {
+            "id": "pixel.flow-1",
+            "description": "Describe the screens and navigation for a 3-step onboarding flow that collects a user's company size, role, and primary use case."
+        },
+        {
+            "id": "pixel.wireframe-1",
+            "description": "Describe the layout of a run-detail dashboard page showing status, logs, cost, and a cancel button — specify grid and hierarchy."
+        },
+        {
+            "id": "pixel.empty-1",
+            "description": "Design the empty state for a project list page when the user has no projects yet — copy, visual, and primary CTA."
+        },
+        {
+            "id": "pixel.form-1",
+            "description": "Lay out a settings form with 8 fields split across 2 logical groups. Describe spacing, labels, and submit-button placement."
+        },
+        {
+            "id": "pixel.error-1",
+            "description": "Design the inline error state for a checkout form when the payment card is declined. Copy plus visual treatment."
+        },
+        {
+            "id": "pixel.nav-1",
+            "description": "Describe a responsive top-nav with 5 primary links that collapses to a hamburger below 768px. Include focus/active states."
+        }
+    ]
+}

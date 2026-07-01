@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+vendor/
+venv/
+__pycache__/
+
+# Build output
+dist/
+build/
+out/
+*.js.map
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets
+credentials.json
+*.pem
+*.key
+*.p12
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+*.db
+*.sqlite
+*.pid
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Package archives
+*.tgz
+*.tar.gz
+*.zip

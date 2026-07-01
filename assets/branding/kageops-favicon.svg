@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="64" height="64" fill="none" role="img" aria-label="KageOps">
+  <!--
+    KageOps · Favicon — Mark C foot reduction
+    The canonical favicon strips Mark C down to its accent foot triangle —
+    the only saturated element. Most legible at 16×16 / 32×32 pixel grids.
+    Triangle silhouette mirrors the Mark C foot exactly (same vertex angles).
+    Background is a rounded square so the icon reads as a tile in dock /
+    taskbar contexts, with the moss-green triangle as the recognizable mark.
+  -->
+  <rect width="16" height="16" rx="3" fill="#0f0f0f"/>
+  <path d="M4 5 L12 5 L8 12 Z" fill="#5BB377"/>
+</svg>

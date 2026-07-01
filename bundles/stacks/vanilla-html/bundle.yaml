@@ -1,0 +1,47 @@
+schemaVersion: 1
+name: vanilla-html
+kind: stack
+version: "1.0.0"
+kageops_version: ">=0.2.0 <0.6.0"
+description: |
+  Single-page (or small multi-page) HTML/CSS/JS tool. No Node, no npm,
+  no build step. The sweet spot is calculators, converters, landing
+  pages, and single-purpose utilities. localStorage allowed; no backend.
+
+match:
+  phrases:
+    - "vanilla html"
+    - "static html"
+    - "pure html"
+    - "no build step"
+    - "no framework"
+    - "single page"
+    - "calculator"
+    - "converter"
+    - "landing page"
+  tags:
+    - html
+    - css
+    - javascript
+    - static
+    - single-page
+    - vanilla
+  rejectPhrases:
+    - "react"
+    - "vue"
+    - "svelte"
+    - "angular"
+    - "next.js"
+    - "express"
+    - "fastapi"
+    - "node server"
+    - "api endpoint"
+
+prompts:
+  forge_create_ui: prompts/forge-create-ui.md
+  forge_implement_feature: prompts/forge-implement-feature.md
+
+build:
+  skip_npm: true
+  acceptance_required_ids: extract_from_description
+  framework_label: "Static HTML"

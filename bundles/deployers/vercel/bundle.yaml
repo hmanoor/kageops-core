@@ -1,0 +1,38 @@
+schemaVersion: 1
+name: vercel
+kind: deployer
+version: "0.1.0"
+kageops_version: ">=0.3.0 <0.6.0"
+description: |
+  Vercel preview deployer for KageOps-built apps. Aegis runs
+  `vercel deploy --prebuilt --token <T> --yes` against the operator's
+  personal Vercel scope (D-12) and returns the preview URL.
+
+  Token resolution order (D-11):
+    1. KAGEOPS_VERCEL_TOKEN env var (CI escape hatch)
+    2. OS keychain via kageops-secret-store (account "vercel-token")
+    3. ~/.vercel/auth.json — for operators who already use the Vercel CLI
+
+  Deployment is PREVIEW ONLY (D-13). Operator promotes to production
+  manually from the Vercel dashboard once they're happy with the build.
+
+  Pairs with the nextjs-saas stack bundle (Pillar 2.1). The build is
+  expected to have already passed BuildVerificationGate locally — the
+  --prebuilt flag tells Vercel to ship the artifact as-is rather than
+  re-building remotely.
+
+match:
+  phrases:
+    - "deploy to vercel"
+    - "vercel preview"
+    - "next.js"
+    - "nextjs"
+    - "vercel.app"
+  tags:
+    - vercel
+    - preview-deploy
+    - nextjs
+
+build:
+  skip_npm: true
+  framework_label: "Vercel (preview)"

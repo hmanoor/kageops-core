@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; img-src 'self' data: kageops-artifact:; frame-src 'self' kageops-artifact:; font-src 'self' file: data: https://fonts.gstatic.com">
+    <title>KageOps — Command Center</title>
+    <link rel="stylesheet" href="tokens.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="shell.css">
+    <link rel="stylesheet" href="command-palette.css">
+    <link rel="stylesheet" href="command-center.css">
+    <link rel="stylesheet" href="shell-polish.css">
+    <link rel="stylesheet" href="setup-wizard.css">
+    <link rel="stylesheet" href="new-project-quickflow.css">
+    <link rel="stylesheet" href="project-board-view.css">
+    <link rel="stylesheet" href="agent-logs-panel.css">
+    <link rel="stylesheet" href="idle-screen.css">
+    <link rel="stylesheet" href="interactive-shell-panel.css">
+    <link rel="stylesheet" href="cloud-burst-panel.css">
+</head>
+<body data-shell="activity-bar">
+    <!-- ── Top Bar ─────────────────────────────── -->
+    <header class="top-bar">
+        <div class="top-bar-brand">
+            <span class="logo" aria-hidden="true">
+                <!-- Mark C · Kanji-fold (abstracted 影).
+                     Strokes use currentColor so the mark auto-themes
+                     against the top-bar text colour (light/dark).
+                     Geometry pulled verbatim from
+                     docs/design_pack/wave-2-mission-control/design-system/preview/
+                     Brand Mark + Loader.html (Mark C cell). -->
+                <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                    <g stroke="currentColor" stroke-width="2.2" fill="none"
+                       stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+                        <path d="M14 16 L34 16 L34 32 L18 32"/>
+                        <path d="M22 22 L30 22"/>
+                        <path d="M40 14 L40 44 M44 18 L48 14 M44 30 L48 26 M44 42 L48 38"/>
+                    </g>
+                    <path d="M22 40 L34 40 L28 50 Z" fill="oklch(0.66 0.12 150)"/>
+                </svg>
+            </span>
+            <h1>Kage<span class="brand-accent">Ops</span></h1>
+            <span class="subtitle">Command Center</span>
+        </div>
+
+        <!-- Live system status -->
+        <div id="status-bar-container" class="top-bar-status"></div>
+
+        <div class="top-bar-views">
+            <button id="btn-notifications" class="btn-notification" title="Notifications" aria-haspopup="dialog" aria-expanded="false">
+                <span class="btn-notification__icon" data-icon="bell" data-icon-size="16"></span>
+                <span id="notif-bell-count" class="btn-notification__badge" hidden>0</span>
+            </button>
+            <button id="btn-theme-toggle" class="btn-theme-toggle" title="Toggle Dark/Light theme" data-icon="moon" data-icon-size="16"></button>
+
+            <!-- Signed-in user pill — populated by command-center.ts on init.
+                 Click toggles the user menu (sign out, plan badge, copy email). -->
+            <button id="btn-user-pill" class="btn-user-pill" type="button" title="Account menu" aria-haspopup="menu" aria-expanded="false">
+                <span class="user-avatar" id="user-avatar">··</span>
+                <span class="user-name" id="user-name">Loading…</span>
+                <svg class="user-caret" viewBox="0 0 12 12" aria-hidden="true">
+                    <path d="M3 5 L6 8 L9 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div id="user-menu" class="user-menu" hidden role="menu" aria-label="Account">
+                <div class="user-menu__head">
+                    <div class="user-menu__name" id="user-menu-name">—</div>
+                    <div class="user-menu__email" id="user-menu-email">—</div>
+                    <div class="user-menu__plan" id="user-menu-plan">free</div>
+                </div>
+                <button id="user-menu-manage-plan" class="user-menu__item" role="menuitem" type="button">
+                    <span>Manage plan</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><polyline points="7 7 17 7 17 17"/></svg>
+                </button>
+                <button id="user-menu-signout" class="user-menu__item" role="menuitem" type="button">Sign out</button>
+            </div>
+        </div>
+
+        <!-- Notification popover (anchored to the bell). Renders the
+             same Linear-style two-column inbox used elsewhere. -->
+        <div id="notif-popover" class="notif-popover" hidden role="dialog" aria-label="Notifications">
+            <div class="notif-popover__head">
+                <span class="notif-popover__title">Notifications</span>
+                <button id="notif-mark-read" class="notif-popover__action" type="button">Mark all read</button>
+            </div>
+            <div id="notif-popover-body" class="notif-popover__body">
+                <div class="empty-state">Loading…</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Bootstrap-failure banner. Hidden by default; populated by the
+         renderer when get-system-status returns bootstrapError. Visible
+         indicator that's impossible to miss (tooltips were unreliable). -->
+    <div id="boot-error-banner" class="boot-error-banner" hidden role="alert">
+        <span class="boot-error-banner__icon">⚠</span>
+        <span class="boot-error-banner__title">Orchestrator failed to start</span>
+        <span class="boot-error-banner__msg" id="boot-error-banner-msg"></span>
+        <button id="boot-error-banner-copy" class="boot-error-banner__btn" type="button" title="Copy error to clipboard">Copy</button>
+        <button id="boot-error-banner-dismiss" class="boot-error-banner__btn boot-error-banner__btn--dismiss" type="button" title="Hide this banner">×</button>
+    </div>
+
+    <!-- ── Shell row: activity bar + views ─────────── -->
+    <div class="app-shell">
+        <div id="activity-bar-host" class="app-shell__rail"></div>
+        <div class="app-shell__views">
+
+    <!-- ── View: Mission Control ────────────────── -->
+    <div class="view-panel" id="view-mc">
+    <div class="layout" id="layout" data-sensei-open="false" data-left-open="true">
+
+        <!-- ── Left Sidebar ─────────────────── -->
+        <aside class="sidebar sidebar--left" id="sidebar-left">
+
+            <!-- Sidebar header: collapse button -->
+            <div class="sidebar-header">
+                <button
+                    type="button"
+                    id="collapse-left-btn"
+                    class="sidebar-collapse-btn"
+                    title="Collapse sidebar"
+                    aria-label="Collapse sidebar">
+                    <span data-icon="chevron-left" data-icon-size="14"></span>
+                </button>
+            </div>
+
+            <!-- Operation Mode -->
+            <div class="mode-switcher" id="mode-switcher">
+                <button class="mode-btn active" data-mode="supervised" title="You approve before agents advance to each new phase">
+                    <span class="mode-icon" data-icon="shield" data-icon-size="16"></span>
+                    <span class="mode-label">Supervised</span>
+                </button>
+                <button class="mode-btn" data-mode="autonomous" title="Agents complete all phases without pausing for approval">
+                    <span class="mode-icon" data-icon="rocket" data-icon-size="16"></span>
+                    <span class="mode-label">Autonomous</span>
+                </button>
+                <button class="mode-btn" data-mode="chat-only" title="Direct chat with Sensei, no agent tasks">
+                    <span class="mode-icon" data-icon="message-circle" data-icon-size="16"></span>
+                    <span class="mode-label">Direct</span>
+                </button>
+            </div>
+            <div class="mode-desc" id="mode-desc">You approve before agents advance to each new phase</div>
+
+            <!-- Projects -->
+            <section class="panel" data-panel="projects">
+                <div class="panel-header" title="Click to expand/collapse">
+                    <h2>Projects</h2>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <!-- Single entry point: the modal exposes both Dry Run and Create & Start. -->
+                        <button id="btn-new-project" class="btn-new-project" title="Create a new project (dry-run preview or live start)">+ New Project</button>
+                        <span class="panel-collapse-chevron">▼</span>
+                    </div>
+                </div>
+                <div class="panel-body-wrap">
+                    <div class="projects-tabs" id="projects-tabs" role="tablist">
+                        <button class="projects-tab projects-tab--active" data-tab="active" role="tab" aria-selected="true">Active</button>
+                        <button class="projects-tab" data-tab="completed" role="tab" aria-selected="false">Completed</button>
+                        <button class="projects-tab" data-tab="archived" role="tab" aria-selected="false">Archived</button>
+                    </div>
+                    <div class="projects-toolbar" id="projects-toolbar">
+                        <input
+                            type="search"
+                            id="projects-search"
+                            class="projects-search"
+                            placeholder="Search name or description…"
+                            aria-label="Search projects"
+                            autocomplete="off"
+                            spellcheck="false">
+                        <select id="projects-status-filter" class="projects-status-filter" aria-label="Filter by status">
+                            <option value="">All statuses</option>
+                        </select>
+                        <select id="projects-phase-filter" class="projects-phase-filter" aria-label="Filter by phase">
+                            <option value="">All phases</option>
+                        </select>
+                        <button type="button" id="projects-clear-filters" class="btn-secondary projects-clear-filters" title="Clear search and filters">Clear</button>
+                        <span id="projects-filter-count" class="projects-filter-count" aria-live="polite"></span>
+                    </div>
+                    <div id="projects-list" class="panel-body panel-body--flush">
+                        <div class="empty-state">No active projects</div>
+                    </div>
+                </div>
+            </section>
+
+        </aside>
+
+        <!-- Resize handle left -->
+        <div class="sidebar-resize-handle" id="resize-left" data-sidebar="left"></div>
+
+        <!-- ── Main Content ──────────────────── -->
+        <main class="main-content">
+
+            <!-- VS Code-style MC split layout -->
+            <div id="mc-split" class="mc-split">
+                <!-- Top: orchestration flow -->
+                <div id="mc-flow" class="mc-flow">
+                    <div class="mc-flow-header">
+                        <h2>Orchestration Flow</h2>
+                        <div class="mc-flow-header-right">
+                            <span id="orch-flow-live" class="badge badge--live" title="Agents update in real-time">LIVE</span>
+                            <button id="mc-flow-fullscreen" class="mc-icon-btn" title="Toggle fullscreen">⛶</button>
+                        </div>
+                    </div>
+                    <div id="orch-flow-container" class="mc-flow-body"></div>
+                </div>
+
+                <!-- Drag handle -->
+                <div id="mc-bottom-drag" class="mc-bottom-drag"></div>
+
+                <!-- Bottom panel -->
+                <div id="mc-bottom" class="mc-bottom">
+                    <div class="mc-bottom-tabbar">
+                        <div class="mc-bottom-tabs" role="tablist">
+                            <button class="mc-btab mc-btab--active" data-btab="activity" role="tab" aria-selected="true">Agent Activity</button>
+                            <button class="mc-btab" data-btab="approvals" role="tab" aria-selected="false">
+                                Approvals <span id="approval-count" class="badge">0</span>
+                            </button>
+                            <span class="mc-btab-sep"></span>
+                            <button class="mc-btab" data-btab="mc-logs" role="tab" aria-selected="false">Logs</button>
+                            <button class="mc-btab" data-btab="mc-cli" role="tab" aria-selected="false">CLI</button>
+                            <button class="mc-btab" data-btab="build" role="tab" aria-selected="false">Build</button>
+                        </div>
+                        <div class="mc-bottom-actions">
+                            <button id="mc-bottom-max" class="mc-icon-btn" title="Maximize panel">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1H1v3M11 4V1H8M8 11h3V8M1 8v3h3"/></svg>
+                            </button>
+                            <button id="mc-bottom-close" class="mc-icon-btn" title="Close panel">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mc-bpanels">
+                        <div id="activity-feed" class="mc-bpanel" data-bpanel="activity">
+                            <div class="empty-state">Waiting for agent activity...</div>
+                        </div>
+                        <div id="approval-queue" class="mc-bpanel hidden" data-bpanel="approvals">
+                            <div class="empty-state">No pending approvals</div>
+                        </div>
+                        <div id="mc-agent-logs-body" class="mc-bpanel hidden" data-bpanel="mc-logs"></div>
+                        <div id="mc-shell-body" class="mc-bpanel hidden" data-bpanel="mc-cli"></div>
+                        <div id="build-status" class="mc-bpanel hidden" data-bpanel="build">
+                            <div class="empty-state">No builds yet</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Reopen strip — only visible when bottom panel is closed -->
+                <button id="mc-bottom-reopen" class="mc-bottom-reopen" title="Show panel">
+                    <span class="mc-bottom-reopen-label">Agent Activity · Approvals · Logs · CLI · Build</span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8L6 4L10 8"/></svg>
+                </button>
+            </div>
+
+            <!-- Phase Graph (RAG) -->
+            <section class="panel panel--grow" id="phase-graph-section" style="display:none">
+                <div id="phase-graph-container" class="panel-body panel-body--flush" style="min-height:320px"></div>
+            </section>
+
+            <!-- Agent Detail Panel (v1.1) -->
+            <section class="panel" id="agent-detail-section" style="display:none">
+                <div id="agent-detail-container" class="panel-body panel-body--flush"></div>
+            </section>
+
+            <!-- Task Output Viewer (v0.9) -->
+            <section class="panel" id="task-output-section" style="display:none">
+                <div id="task-output-container" class="panel-body panel-body--flush"></div>
+            </section>
+
+            <!-- Document Upload (E1) -->
+            <section class="panel" id="document-upload-section" style="display:none">
+                <div id="document-upload-container" class="panel-body panel-body--flush"></div>
+            </section>
+
+        </main>
+
+        <!-- ── Left edge tab (shown when sidebar is collapsed) ── -->
+        <button type="button" id="open-left-tab" class="layout-edge-tab layout-edge-tab--left" title="Open sidebar" aria-label="Open sidebar">
+            <span class="layout-edge-tab__icon" data-icon="chevron-right" data-icon-size="16"></span>
+            <span class="layout-edge-tab__label">Projects</span>
+        </button>
+
+    </div>
+    </div><!-- /view-mc -->
+
+    <!-- ── View: Autonauts (Agent Dossiers) ───────── -->
+    <div class="view-panel hidden" id="view-au"></div>
+
+    <!-- ── View: Cloud Burst (Pillar 2.4 / PR-F.next + PR-G.next) ───── -->
+    <div class="view-panel hidden" id="view-cloud-burst">
+        <div class="empty-state">Loading Cloud Burst…</div>
+    </div>
+
+    <!-- ── View: Knowledge Base ──────────────────── -->
+    <div class="view-panel hidden" id="view-kb">
+        <div class="empty-state">Loading Knowledge Base…</div>
+    </div>
+
+    <!-- ── View: Identity ────────────────────────── -->
+    <div class="view-panel hidden" id="view-id">
+        <div class="empty-state">Loading Identity…</div>
+    </div>
+
+    <!-- ── View: Model Routing ────────────────────── -->
+    <div class="view-panel hidden" id="view-model-routing">
+        <div class="view-header">
+            <h2>Model Routing Presets</h2>
+            <p class="view-header-sub">Swap AI provider mixes without editing config files.</p>
+        </div>
+        <div id="model-routing-body" class="view-body">
+            <div class="empty-state">Loading…</div>
+        </div>
+    </div>
+
+    <!-- ── View: Cost Intelligence ────────────────── -->
+    <div class="view-panel hidden" id="view-cost-intel">
+        <div class="view-header">
+            <h2>Cost Intelligence</h2>
+            <p class="view-header-sub">Live spend, model-mix breakdown, and projection.</p>
+        </div>
+        <div id="cost-intelligence-body" class="view-body">
+            <div class="empty-state">Loading cost data…</div>
+        </div>
+    </div>
+
+    <!-- ── View: Code Graph ───────────────────────── -->
+    <div class="view-panel hidden" id="view-code-graph">
+        <div class="view-header">
+            <h2>Code Graph</h2>
+            <p class="view-header-sub">Model Context Protocol — project symbol graph.</p>
+        </div>
+        <details class="panel-intro">
+            <summary class="panel-intro__toggle">About this panel</summary>
+            <h3 class="panel-intro__title">What this does</h3>
+            <p class="panel-intro__body">
+                Builds a structural map of every project — files, exports, functions, classes, imports —
+                served over <b>MCP (Model Context Protocol)</b>. Forge and Vigil consult this graph before
+                editing code, so the agents know which call sites a function has and which files import a
+                module. It's how Forge avoids breaking distant callers when refactoring.
+            </p>
+            <p class="panel-intro__body"><b>How to read it:</b></p>
+            <ul class="panel-intro__list">
+                <li><b>Status</b> — <code>ready</code> means the graph is built and queryable; <code>building</code>
+                    means a rebuild is in flight; <code>stale</code> means files changed since the last build and
+                    a rebuild is queued.</li>
+                <li><b>Symbols / files</b> — counts give a feel for project size; expect a few hundred symbols
+                    for a typical landing page, tens of thousands for KageOps itself.</li>
+                <li><b>Last built</b> — the graph rebuilds on <code>project.created</code> and after large file changes.
+                    Manual rebuild from the action above the table.</li>
+            </ul>
+            <p class="panel-intro__tip">
+                <strong>When this matters:</strong> if Forge keeps producing changes that break unrelated callers,
+                the graph is probably stale or missing — check status here. If it shows <code>error</code>, the
+                graphify worker likely couldn't parse a new file extension; see Help → Troubleshooting.
+            </p>
+        </details>
+        <div id="code-graph-body" class="view-body view-body--flush">
+            <div class="empty-state">Loading graph status…</div>
+        </div>
+    </div>
+
+    <!-- ── View: GitHub ───────────────────────────── -->
+    <div class="view-panel hidden" id="view-github">
+        <div class="view-header">
+            <h2>GitHub</h2>
+            <p class="view-header-sub">Personal access token and per-project repo wiring.</p>
+        </div>
+        <details class="panel-intro">
+            <summary class="panel-intro__toggle">About this panel</summary>
+            <h3 class="panel-intro__title">What this does</h3>
+            <p class="panel-intro__body">
+                Lets KageOps push commits, open PRs, and read CI status on your behalf. A
+                <b>Personal Access Token (PAT)</b> with <code>repo</code> scope is required.
+                Per-project mappings (<code>github_owner</code> / <code>github_repo</code>) tell Aegis where
+                to push when a project is built — without a mapping, KageOps stays local.
+            </p>
+            <p class="panel-intro__body"><b>How to use it:</b></p>
+            <ul class="panel-intro__list">
+                <li><b>Set the PAT</b> — paste a fine-grained token here. It's stored in the OS Keychain (macOS Keychain / Windows Credential Manager / libsecret), never in plaintext.</li>
+                <li><b>Per-project mapping</b> — attach a <code>owner/repo</code> to a project to enable auto-push and auto-PR for that project. Other projects stay unaffected.</li>
+                <li><b>Disable globally</b> — set <code>KAGEOPS_DISABLE_GIT=1</code> to make all git/GitHub operations no-ops. Useful for benchmarks and throwaway tests.</li>
+            </ul>
+            <p class="panel-intro__body"><b>Recommended scopes:</b> <code>repo</code> (push, PRs, statuses), <code>read:org</code> (org repos), nothing else. KageOps never needs <code>delete_repo</code> or <code>admin:*</code>.</p>
+            <p class="panel-intro__tip">
+                <strong>Implications:</strong> Once a project is mapped, every successful task push happens immediately — there's no draft mode. If Aegis pushes to a wrong repo, revert via <code>git push --force-with-lease</code> from a checkout (KageOps does not run destructive remote ops). Rotate tokens at GitHub if you suspect leakage; the OS Keychain entry is replaced on next save.
+            </p>
+        </details>
+        <div id="github-settings-body" class="view-body">
+            <div class="empty-state">Loading…</div>
+        </div>
+    </div>
+
+    <!-- ── View: Deployments ──────────────────────── -->
+    <div class="view-panel hidden" id="view-deployments">
+        <div class="view-header">
+            <h2>Deployments</h2>
+            <p class="view-header-sub">Azure environments, deploy targets, and history.</p>
+        </div>
+        <details class="panel-intro">
+            <summary class="panel-intro__toggle">About this panel</summary>
+            <h3 class="panel-intro__title">What this does</h3>
+            <p class="panel-intro__body">
+                One place to register your <b>Azure environments</b> — a subscription, resource group,
+                region and (optionally) tenant + credential, given an operator-facing label. You enter
+                these coordinates <b>once</b>: <b>Cloud Burst</b> uses an environment for ephemeral
+                build-time compute (ACI), and <b>Deployments</b> uses it for persistent run-time hosting.
+                No more typing the same subscription in two places.
+            </p>
+            <p class="panel-intro__body"><b>How to use it:</b></p>
+            <ul class="panel-intro__list">
+                <li><b>Add Environment</b> — register a subscription / resource group / region under a label like "Production AU".</li>
+                <li><b>Credentials</b> — leave the credential ref blank to use <code>DefaultAzureCredential</code> (az-login / managed identity / env). Set a pointer only for a stored service principal.</li>
+                <li><b>Edit</b> — resource group, region, tenant and credential are mutable. Label and subscription are the environment's identity; delete and recreate to change them.</li>
+            </ul>
+            <p class="panel-intro__body"><b>Best practice:</b> register each Azure subscription once here, then pick it from a dropdown wherever bursting or hosting needs it.</p>
+            <p class="panel-intro__tip">
+                <strong>Implications:</strong> deleting an environment is blocked while a Cloud Burst pool still references it — repoint or delete that pool first. Register a <b>deploy target</b> below the registry to deploy a finished project to Azure (App Service or Static Web Apps); one-click teardown lands in a later release.
+            </p>
+        </details>
+        <div id="deployments-body" class="view-body view-body--flush">
+            <div class="empty-state">Loading…</div>
+        </div>
+    </div>
+
+    <!-- ── View: APO (History + Rollback) ─────────── -->
+    <div class="view-panel hidden" id="view-apo">
+        <div class="view-header">
+            <h2>APO — Automatic Prompt Optimization</h2>
+            <p class="view-header-sub">Review proposed prompt changes and roll back winners.</p>
+        </div>
+        <details class="panel-intro">
+            <summary class="panel-intro__toggle">About this panel</summary>
+            <h3 class="panel-intro__title">What this does</h3>
+            <p class="panel-intro__body">
+                APO mutates an agent's baseline prompt, scores each variant against a fixed bank of
+                <b>golden tasks</b> using a cheap eval model, and proposes the best one for human review.
+                Scope is intentionally narrow — only Scout, Herald, and Pixel — because those agents
+                produce deterministic-quality output that's safe to evaluate offline.
+            </p>
+            <p class="panel-intro__body"><b>How to use it:</b></p>
+            <ul class="panel-intro__list">
+                <li><b>Enable</b> — set <code>KAGEOPS_APO_ENABLED=1</code>. The scheduler is off by default.</li>
+                <li><b>History &amp; Proposals</b> — every nightly run lands as <code>proposed</code>. KageOps <i>never</i> auto-applies — you click Accept or Reject.</li>
+                <li><b>Rollback</b> — reverts the active prompt back to the previous version. Useful when an accepted change degrades real-world output.</li>
+                <li><b>Min delta</b> — only proposals exceeding <code>KAGEOPS_APO_MIN_DELTA</code> over baseline are surfaced. Defaults to a meaningful improvement, not noise.</li>
+            </ul>
+            <p class="panel-intro__body"><b>Best option:</b> leave APO off until you've run ~20 projects. Without that history, golden-task scores can over-fit. Once enabled, accept proposals only after spot-checking 2-3 generated samples against the new prompt.</p>
+            <p class="panel-intro__tip">
+                <strong>Implications:</strong> APO calls the mutator + eval models on a schedule — that's ongoing token spend even when you're not using the app. Default models are cheap (Haiku, gpt-4o-mini), but check Cost Intelligence regularly. To pause without losing history, unset <code>KAGEOPS_APO_ENABLED</code>; the proposals stay viewable here.
+            </p>
+        </details>
+        <div class="view-body view-body--flush apo-combined-view">
+            <div id="apo-history-body" class="apo-section">
+                <div class="empty-state">Loading…</div>
+            </div>
+            <div class="apo-section-divider"></div>
+            <div id="apo-rollback-body" class="apo-section">
+                <div class="empty-state">Loading…</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── View: Team ─────────────────────────────── -->
+    <div class="view-panel hidden" id="view-team">
+        <div class="view-header">
+            <h2>Team</h2>
+            <p class="view-header-sub">Members and role assignments.</p>
+        </div>
+        <div id="team-members-body" class="view-body view-body--flush">
+            <div class="empty-state">Loading…</div>
+        </div>
+    </div>
+
+    <!-- ── View: Configuration ────────────────────── -->
+    <div class="view-panel hidden" id="view-config">
+        <div class="view-header">
+            <h2>Configuration</h2>
+            <p class="view-header-sub">Provider keys, env vars, agent model routing, and permissions.</p>
+        </div>
+        <!-- Tab bar -->
+        <div class="config-tabs" role="tablist">
+            <button class="config-tab config-tab--active" data-config-tab="general" role="tab" aria-selected="true">General</button>
+            <button class="config-tab" data-config-tab="permissions" role="tab" aria-selected="false">Permissions</button>
+            <button class="config-tab" data-config-tab="connectors" role="tab" aria-selected="false">Connectors</button>
+        </div>
+        <!-- Tab panels -->
+        <div id="config-panel-body" class="view-body config-tab-panel" data-config-panel="general"></div>
+        <div id="permissions-body" class="view-body config-tab-panel hidden" data-config-panel="permissions">
+            <div class="empty-state">Loading...</div>
+        </div>
+        <div id="connectors-body" class="view-body config-tab-panel hidden" data-config-panel="connectors">
+            <div class="empty-state">Loading…</div>
+        </div>
+    </div>
+
+    <!-- ── View: Terminal Hub ─────────────────────────── -->
+    <div class="view-panel hidden" id="view-terminal-hub">
+        <div class="terminal-hub">
+            <div class="terminal-hub__tabs" role="tablist">
+                <button class="terminal-hub__tab is-active" data-hub-tab="shell" role="tab" aria-selected="true">Interactive Shell</button>
+                <button class="terminal-hub__tab" data-hub-tab="agent-logs" role="tab" aria-selected="false">Agent Logs</button>
+                <button class="terminal-hub__tab" data-hub-tab="agent-terminal" role="tab" aria-selected="false">Agent Terminal</button>
+            </div>
+            <div class="terminal-hub__panels">
+                <div class="terminal-hub__panel" data-hub-panel="shell" id="interactive-shell-body"></div>
+                <div class="terminal-hub__panel hidden" data-hub-panel="agent-logs" id="agent-logs-body"></div>
+                <div class="terminal-hub__panel hidden" data-hub-panel="agent-terminal" id="agent-terminal-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── View: Help & Guides ────────────────────── -->
+    <div class="view-panel hidden" id="view-help">
+        <div class="view-header">
+            <h2>Help &amp; Guides</h2>
+            <p class="view-header-sub">Presets, design providers, env vars, and how to keep them straight.</p>
+        </div>
+        <div id="help-panel-body" class="view-body view-body--flush"></div>
+    </div>
+
+    <!-- ── View: Project Board (Linear-style) ──────── -->
+    <div class="view-panel hidden" id="view-board">
+        <div id="project-board-body" class="view-body view-body--flush"></div>
+    </div>
+
+
+
+        </div><!-- /.app-shell__views -->
+    </div><!-- /.app-shell -->
+
+    <!-- ── New Project Modal (advanced onboarding) ─── -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal modal--onboarding">
+            <div class="modal-header">
+                <h2>New Project</h2>
+                <button id="btn-modal-close" class="btn-icon">&times;</button>
+            </div>
+            <div class="modal-body modal-body--onboarding">
+
+                <!-- ROW 1 — name + prompt -->
+                <div class="onboard-row">
+                    <label class="onboard-field" for="project-name">
+                        <span class="onboard-field-label">Project Name <span class="onboard-required">*</span></span>
+                        <input type="text" id="project-name" class="onboard-input"
+                               placeholder="e.g. Plant Sanctuary, KageOps Landing">
+                    </label>
+                </div>
+
+                <!-- ROW 1b — bundle picker (Pillar 2.2 / D-A) -->
+                <div class="onboard-row">
+                    <label class="onboard-field" for="onboard-bundle">
+                        <span class="onboard-field-label">Project Type</span>
+                        <span class="onboard-field-hint">Drives the scaffold + deployment configuration below. Leave blank to let Scout auto-pick.</span>
+                        <select id="onboard-bundle" class="onboard-select">
+                            <option value="">(auto — let Scout pick)</option>
+                        </select>
+                    </label>
+                </div>
+
+                <!-- ROW 1c — Deployment configuration (Pillar 2.2) -->
+                <!-- Sits directly under Project Type because the picker drives this section. -->
+                <section id="onboard-deployment-section" class="onboard-deployment">
+                    <!-- Populated by deployment-config-section.ts when a bundle with a `deployment` block is picked. -->
+                </section>
+
+                <div class="onboard-row">
+                    <label class="onboard-field" for="project-desc">
+                        <span class="onboard-field-label">Prompt <span class="onboard-required">*</span></span>
+                        <span class="onboard-field-hint">What should Sensei build? Include user-visible behaviour, sections, key acceptance criteria.</span>
+                        <textarea id="project-desc" rows="5" class="onboard-textarea"
+                                  placeholder="A single-page landing for KageOps — hero with headline, agent grid, how-it-works strip, waitlist form…"></textarea>
+                    </label>
+                </div>
+
+                <!-- ROW 2 — budget · trust -->
+                <div class="onboard-row onboard-row--inline">
+                    <label class="onboard-field onboard-field--narrow">
+                        <span class="onboard-field-label">Budget Cap (USD)</span>
+                        <span class="onboard-field-hint">Hard kill. Leave 0 for default.</span>
+                        <input type="number" id="onboard-budget" class="onboard-input"
+                               min="0" step="0.05" value="0.50">
+                    </label>
+                    <label class="onboard-field onboard-field--narrow">
+                        <span class="onboard-field-label">Trust Level</span>
+                        <span class="onboard-field-hint">Higher trust = fewer approval gates.</span>
+                        <select id="onboard-trust" class="onboard-select">
+                            <option value="low">Low — approve every gate</option>
+                            <option value="medium" selected>Medium — auto-advance routine gates</option>
+                            <option value="high">High — autonomous after design</option>
+                        </select>
+                    </label>
+                </div>
+
+                <!-- ROW 3 — phases & tasks (#165 stage 2) -->
+                <fieldset class="onboard-phases">
+                    <legend class="onboard-field-label">Phases &amp; Tasks <span class="onboard-required">*</span></legend>
+                    <span class="onboard-field-hint">
+                        Tick the phases you want, expand each to pick the exact tasks. Quick presets seed sensible defaults — tweak from there.
+                    </span>
+                    <div class="onboard-quick-presets" id="onboard-quick-presets">
+                        <span class="onboard-quick-presets-label">Quick presets:</span>
+                        <!-- Buttons populated from QUICK_PRESETS in JS -->
+                        <span class="onboard-active-preset" id="onboard-active-preset" aria-live="polite">Custom</span>
+                    </div>
+                    <div class="onboard-phase-task-tree" id="onboard-phase-task-tree"
+                         aria-label="Per-phase task selection tree">
+                        <!-- Populated by renderPhaseTaskTree() from PHASE_CATALOGUE -->
+                    </div>
+                </fieldset>
+
+                <!-- ROW 4 — collapsible optional details -->
+                <details class="onboard-optional">
+                    <summary>Optional details — type, stack, goal, attachments</summary>
+                    <div class="onboard-optional-body">
+
+                        <div class="onboard-row onboard-row--inline">
+                            <label class="onboard-field onboard-field--narrow">
+                                <span class="onboard-field-label">Project Type</span>
+                                <select id="onboard-type" class="onboard-select">
+                                    <option value="">(unspecified)</option>
+                                    <option value="landing-page">Landing page</option>
+                                    <option value="internal-tool">Internal tool</option>
+                                    <option value="full-saas">Full SaaS</option>
+                                    <option value="mobile">Mobile app</option>
+                                    <option value="cli">CLI / library</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </label>
+                            <label class="onboard-field onboard-field--narrow">
+                                <span class="onboard-field-label">Tech Stack</span>
+                                <input type="text" id="onboard-stack" class="onboard-input"
+                                       placeholder="e.g. Vanilla HTML/CSS/JS, Next.js, Astro + Tailwind">
+                            </label>
+                        </div>
+
+                        <div class="onboard-row">
+                            <label class="onboard-field" for="onboard-goal">
+                                <span class="onboard-field-label">Goal / Success Criteria</span>
+                                <span class="onboard-field-hint">What does shipping success look like? Helps Vigil's quality gate.</span>
+                                <textarea id="onboard-goal" rows="2" class="onboard-textarea"
+                                          placeholder="Page loads &lt; 500ms, signs up 100 founders before launch, Lighthouse a11y &gt; 95…"></textarea>
+                            </label>
+                        </div>
+
+                        <div class="onboard-row">
+                            <span class="onboard-field-label">Attachments</span>
+                            <span class="onboard-field-hint">PRDs, briefs, design refs (.md / .pdf / .txt / .png).</span>
+                            <div class="doc-attach-zone" id="doc-attach-zone" title="Click to add files or drag &amp; drop">
+                                <span data-icon="paperclip" data-icon-size="14"></span> Attach project documents
+                                <input type="file" id="doc-attach-input" multiple style="display:none" accept=".pdf,.md,.txt,.doc,.docx,.png,.jpg,.jpeg,.csv">
+                            </div>
+                            <div class="doc-attach-list" id="doc-attach-list"></div>
+                        </div>
+
+                    </div>
+                </details>
+
+                <!-- Dry-run preview output (rendered when the operator clicks Dry Run in the footer). -->
+                <pre id="dry-run-preview" class="dry-run-preview" style="display:none" aria-live="polite"></pre>
+
+            </div>
+            <div class="modal-footer">
+                <button id="btn-modal-cancel" class="btn-secondary">Cancel</button>
+                <button id="btn-modal-dry-run" class="btn-secondary" title="Preview the plan without spending any AI budget">Dry Run</button>
+                <button id="btn-modal-create" class="btn-primary" title="Create the project and start the live run">Create &amp; Start</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Dry Run Result Toast (B-400) ─────────── -->
+    <div id="project-run-toast" class="project-run-toast hidden" role="status" aria-live="polite">
+        <div class="project-run-toast__header">
+            <span class="project-run-toast__title">Dry Run</span>
+            <button id="project-run-toast-close" class="btn-icon project-run-toast__close">×</button>
+        </div>
+        <pre id="project-run-toast-body" class="project-run-toast__body"></pre>
+    </div>
+
+    <!-- Generic floating panel overlay (graph, docs, agent detail) -->
+    <div id="float-overlay" class="config-overlay hidden">
+        <div class="config-panel-wrap float-panel-wrap">
+            <div class="config-panel-header">
+                <span id="float-overlay-title" class="config-panel-title"></span>
+                <button id="float-overlay-close" class="config-close-btn">✕</button>
+            </div>
+            <div id="float-overlay-body" class="config-panel-body float-panel-body"></div>
+        </div>
+    </div>
+
+    <!-- ── Sensei floating popup ───────────────────────── -->
+    <aside class="sensei-dock sensei-dock--float" id="sensei-chat" hidden>
+        <div class="sensei-resize-handle sensei-resize-handle--left" id="sensei-resize-left" aria-hidden="true"></div>
+        <div class="sensei-resize-handle sensei-resize-handle--bottom" id="sensei-resize-bottom" aria-hidden="true"></div>
+        <div class="sensei-resize-handle sensei-resize-handle--corner" id="sensei-resize-corner" aria-hidden="true"></div>
+        <div class="sensei-header" id="sensei-header">
+            <div class="sensei-header-left">
+                <span class="sensei-avatar" title="Sensei — Master Orchestrator" data-icon="sensei" data-icon-size="18"></span>
+                <span class="sensei-title">Sensei</span>
+                <span class="sensei-status" id="sensei-status" title="Current orchestrator status">ready</span>
+            </div>
+            <div class="sensei-header-right">
+                <button class="sensei-expand-btn" id="sensei-expand-btn" title="Close Sensei" aria-label="Close Sensei">
+                    <span data-icon="chevron-right" data-icon-size="14"></span>
+                </button>
+            </div>
+        </div>
+        <div id="sensei-messages" class="sensei-messages"></div>
+        <div class="sensei-input-row">
+<input type="text" id="sensei-input" placeholder="Command Sensei..." autocomplete="off">
+            <button id="btn-sensei-send" class="btn-send" title="Send message to Sensei (Enter)">↑</button>
+        </div>
+    </aside>
+
+    <script src="command-center.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+-- Migration 024: per-project phase_task_selections (issue #165, v0.3.0)
+--
+-- Operator-observed quality drop: "When I create a new project and skip
+-- phases like discovery, business viability, proof of concept, I'm just
+-- going to design and development, I get a very bad quality product."
+--
+-- Root cause: the New Project modal lets the user toggle whole phases
+-- on/off, but inside a kept phase the decomposer LLM decides which task
+-- types to emit. When the operator picks "skip Discovery" the downstream
+-- phases lose the concept-brief + feasibility grounding that the LLM
+-- relies on to scope Forge/Vigil/Pixel work.
+--
+-- The fix is two-level selection: per-phase ON/OFF (today) PLUS per-phase
+-- task-type checklist. The decomposer is then handed a HARD CONSTRAINT
+-- listing the allowed task types for the phase, instead of letting it
+-- pick freely from the agent's full catalogue.
+--
+-- This migration adds the optional JSONB column that carries those
+-- selections. NULL = today's behaviour (LLM picks freely). When set,
+-- shape is:
+--   {
+--     "discovery":       ["concept-brief", "feasibility-assessment"],
+--     "poc":             ["setup-project"],
+--     "design-planning": ["wireframe", "design-system", "user-flow"],
+--     "development":     ["implement", "create-ui", "add-tests"]
+--   }
+-- Phase keys absent from the JSON are treated the same as NULL — the
+-- decomposer picks freely. This lets the UI carry "POC preset" partial
+-- selections without forcing the user to declare every phase up front.
+--
+-- Idempotent — safe to re-run.
+
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS phase_task_selections JSONB DEFAULT NULL;

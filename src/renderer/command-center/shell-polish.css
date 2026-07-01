@@ -1,0 +1,3190 @@
+/* ═══════════════════════════════════════════════════════════════
+   KageOps Command Center — Shell Polish (Wave 2 quality pass)
+   ───────────────────────────────────────────────────────────────
+   Loaded AFTER command-center.css to override the legacy chrome
+   with restrained, Linear/Vercel/Claude Code-grade treatment.
+
+   Design principles:
+     • Hairline borders, NEVER glows or drop shadows on accent.
+     • Single-pixel touches of moss-green ONLY on selected /
+       active / live / focused states. Everything else is neutral
+       slate. Never color a chrome surface (top bar, sidebar,
+       sensei dock) with brand accent.
+     • Tight typography: 13 px body, 12 px chrome labels, mono
+       at 11 px. Tracking -0.005em on titles.
+     • Surfaces are flat. No backdrop blur (slow + dated). No
+       saturate(180%) tricks. Just `var(--surface)`.
+     • Sigils render in `--text-subtle` by default; agent color
+       only appears when the agent is actively doing something.
+
+   The named precedents this file is calibrated against:
+     - Linear (linear.app): hairline panels, deep slate, single
+       purple accent on selected rows only.
+     - Vercel (vercel.com): black on black, single hairline
+       border, monochrome geometric brand.
+     - Claude Code: terminal minimalism, mostly grayscale.
+     - Apple developer.apple.com: white/neutral surfaces, single
+       blue accent on selected/CTA, hairline rules.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Override --font-display to use Inter ───────────────────────
+ * Reserve serif display only for explicit hero moments. The default
+ * `--font-display` was Instrument Serif which read as quirky in
+ * dense surfaces. Override the variable so any unintentional usage
+ * falls back to Inter automatically.
+ */
+:root,
+[data-theme="dark"],
+[data-theme="light"] {
+    --font-display: var(--font-sans);
+}
+
+/* ── Body baseline ──────────────────────────────────────────── */
+html, body {
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    letter-spacing: 0;
+    /* Use grayscale AA — matches Linear/Vercel/Apple. Subpixel
+       AA on Windows ClearType is technically sharper but produces
+       the "fringey" look modern enterprise UIs avoid. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* ── Top bar — flat slate, hairline rule, no glow ──────────── */
+.top-bar {
+    height: 40px;
+    padding: 0 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    gap: 16px;
+    /* Suppress the moss-green gradient line under the top bar that
+       was added in earlier waves. It read as decorative. Real
+       enterprise UIs use a single hairline rule. */
+}
+.top-bar::after { content: none !important; display: none !important; }
+
+.top-bar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Brand mark — sits directly on the top-bar surface, no tile, no
+   border. Strokes are slate, the moss-green accent triangle is the
+   only saturated pixel.                                            */
+.top-bar-brand .logo {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: var(--text);
+    filter: none;
+    flex-shrink: 0;
+    overflow: visible;
+}
+.top-bar-brand .logo svg {
+    display: block;
+    width: 32px;
+    height: 32px;
+}
+
+/* Bigger on large screens (4K, 42"+) so the brand mark is actually
+   readable. */
+@media (min-width: 1600px) {
+    .top-bar-brand .logo { width: 40px; height: 40px; }
+    .top-bar-brand .logo svg { width: 40px; height: 40px; }
+    .top-bar-brand h1 { font-size: 16px; }
+    .top-bar-brand .subtitle { font-size: 12px; }
+}
+
+.top-bar-brand h1 {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--text);
+    margin: 0;
+    line-height: 1;
+}
+.top-bar-brand h1 .brand-accent { color: var(--accent); }
+
+.top-bar-brand .subtitle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-subtle);
+    letter-spacing: 0.08em;
+}
+.top-bar-brand .brand-kanji {
+    font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+    font-size: 13px;
+    color: var(--text-subtle);
+    margin-right: 2px;
+}
+
+/* ── Top-bar status group + actions ─────────────────────────── */
+.top-bar-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.top-bar-status .status-pill {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    box-shadow: none;
+}
+.top-bar-status .status-pill .status-dot,
+.top-bar-status .status-pill [class*="status-dot--"] {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    box-shadow: none; /* never glow on chrome */
+}
+.top-bar-status .status-pill .status-dot--success {
+    background: var(--status-success);
+}
+
+.top-bar-views,
+.top-bar > .top-bar-views {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.top-bar-views > button {
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background var(--motion-fast) var(--ease),
+                color var(--motion-fast) var(--ease);
+    box-shadow: none;
+}
+.top-bar-views > button:hover {
+    background: var(--surface-tint-soft);
+    color: var(--text);
+}
+
+/* ── Activity rail — narrow, slate-sunken, hairline ───────── */
+.app-shell__rail,
+#activity-bar-host {
+    width: 48px;
+    background: var(--surface-sunken);
+    border-right: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+/* Inner activity-bar component defaults to 56px in shell.css — pin it
+ * to match the 48px host so top and bottom icon groups stay the same width. */
+.activity-bar {
+    width: 48px !important;
+    flex: 0 0 48px !important;
+    min-width: 0;
+}
+
+/* Active rail button — 2 px accent strip on the inner edge,
+   no glow, no flood. Inherits color via .is-active. */
+.app-shell__rail button.is-active::before,
+.app-shell__rail [data-active="true"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+}
+
+/* ── Sidebar — flat, hairline, mode switcher = segmented ───── */
+.sidebar--left {
+    background: var(--surface);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sidebar--left .sidebar-header {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border-color-subtle);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.mode-switcher {
+    margin: 12px 12px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.mode-switcher .mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background var(--motion-fast), color var(--motion-fast);
+    box-shadow: none;
+}
+.mode-switcher .mode-btn:hover { color: var(--text-muted); }
+.mode-switcher .mode-btn.active {
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: none;
+}
+.mode-switcher .mode-btn svg { width: 14px; height: 14px; }
+
+.mode-desc {
+    font-size: 11px;
+    color: var(--text-subtle);
+    padding: 8px 16px 12px;
+    line-height: 1.4;
+    border-bottom: 1px solid var(--border-color-subtle);
+    margin: 0;
+}
+
+/* ── Project rows — Linear-style: hairline strip + plain text ── */
+.sidebar--left [data-panel="projects"] {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+.sidebar--left [data-panel="projects"] > .panel-header {
+    padding: 16px 12px 8px;
+    border: none;
+    background: transparent;
+}
+
+.sidebar--left [data-panel="projects"] > .panel-header h2 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+    margin: 0;
+}
+
+.projects-tabs {
+    border-bottom: 1px solid var(--border-color-subtle);
+    padding: 0 8px;
+    display: flex;
+}
+.projects-tab {
+    flex: 1;
+    padding: 8px 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-subtle);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color var(--motion-fast), border-color var(--motion-fast);
+    box-shadow: none;
+}
+.projects-tab:hover { color: var(--text-muted); }
+.projects-tab--active,
+.projects-tab[aria-selected="true"] {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+}
+
+/* ── Sensei dock — flat, narrow, no gold glow ─────────────── */
+.sensei-dock {
+    width: 320px;
+    flex: 0 0 320px;
+    background: var(--surface);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    box-shadow: none;
+}
+
+.sensei-dock .sensei-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+}
+
+.sensei-dock .sensei-avatar {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-elev-2, var(--surface-raised));
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    box-shadow: none; /* drop the gold glow */
+}
+.sensei-dock .sensei-avatar svg {
+    width: 14px;
+    height: 14px;
+}
+
+.sensei-dock .sensei-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.005em;
+}
+.sensei-dock .sensei-status {
+    font-size: 11px;
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.sensei-messages {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sensei-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-top: 1px solid var(--border-color);
+}
+.sensei-input-row input {
+    flex: 1;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    outline: none;
+    transition: border-color var(--motion-fast);
+}
+.sensei-input-row input:focus {
+    border-color: var(--border-color-strong);
+    box-shadow: none;
+}
+.sensei-input-row .btn-send {
+    background: var(--accent);
+    color: var(--text-on-accent, #0A0A0A);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: none;
+}
+.sensei-input-row .btn-send:hover { background: var(--accent-hover); }
+
+/* ── Layout grid — Sensei is a real column, not an overlay ────
+ * The legacy CSS had `.sensei-dock` as `position: absolute` so that
+ * opening it floated over the main panels. The user explicitly wants
+ * the main content (orchestration flow / activity / approvals /
+ * build status) to SHIFT LEFT when Sensei opens. So we pull Sensei
+ * back into the grid as a 4th column with a proper width.
+ *
+ * Sensei open  → 320px reserved for it, main shrinks.
+ * Sensei closed → 32px edge-tab strip, dock hidden via existing
+ *                 `[data-sensei-open="false"] .sensei-dock { display: none }`.
+ */
+.layout {
+    display: grid !important;
+    grid-template-columns:
+        var(--left-col, 280px)
+        var(--resize-col, 4px)
+        1fr
+        var(--sensei-col, 320px) !important;
+    height: 100%;
+    min-height: 0;
+    position: relative;
+}
+
+.layout[data-sensei-open="false"] {
+    --sensei-col: 32px;
+}
+.layout[data-sensei-open="true"] {
+    --sensei-col: 320px;
+}
+
+.layout > .sidebar,
+.layout > #sidebar-left { grid-column: 1; grid-row: 1; }
+.layout > .sidebar-resize-handle { grid-column: 2; grid-row: 1; }
+.layout > .main-content { grid-column: 3; grid-row: 1; min-width: 0; }
+
+/* Pull Sensei dock OUT of absolute positioning and into the grid
+ * so the main column actually shrinks when it opens. Override the
+ * legacy `position: absolute; top/right/bottom; width` declaration. */
+.layout > .sensei-dock,
+.layout > #sensei-chat {
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+}
+
+/* The right edge tab (shown only when Sensei is collapsed) sits
+ * inside column 4 — not absolutely floating. Pin it to the right
+ * edge of the column with grid placement; flex internals stay the
+ * same. */
+.layout > .layout-edge-tab--right,
+.layout > #open-sensei-tab {
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+    height: 100%;
+    width: 32px;
+    z-index: auto !important;
+}
+
+/* Hide the right edge tab whenever the Sensei dock is open.
+ * The legacy CSS only had a "show when closed" rule, which left the
+ * tab visible alongside the dock when both occupied the same grid
+ * cell — produced a vertical "SENSEI" sliver inside the open dock. */
+.layout[data-sensei-open="true"] > #open-sensei-tab,
+.layout[data-sensei-open="true"] > .layout-edge-tab--right {
+    display: none !important;
+}
+.layout[data-left-open="true"] > #open-left-tab,
+.layout[data-left-open="true"] > .layout-edge-tab--left {
+    display: none !important;
+}
+
+/* The left edge tab (shown when sidebar is collapsed) — pin to the top
+ * of the column so it's easy to find, not lost in the middle. */
+.layout > .layout-edge-tab--left,
+.layout > #open-left-tab {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    left: auto !important;
+    transform: none !important;
+    align-self: start !important;   /* top-align inside the grid cell */
+    height: auto !important;
+    width: 32px;
+    z-index: auto !important;
+    padding: 12px 0 16px;
+    border-radius: 0 0 8px 0;
+    /* Accent tint so the button reads as "tap to open" affordance */
+    color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 8%, var(--surface-sunken));
+    border-right: 1px solid color-mix(in oklab, var(--accent) 20%, var(--border-color));
+}
+
+/* ── Main column — flat, ample padding, vertical stack ────── */
+.main-content {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--surface);
+}
+
+/* ── Panels — hairline, raised, no shadow ─────────────────── */
+.main-content > .panel,
+.main-content .panel--grow {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.main-content > .panel > .panel-header,
+.main-content .panel > .panel-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: transparent;
+    box-shadow: none;
+}
+
+.main-content .panel > .panel-header h2 {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text);
+    margin: 0;
+}
+
+/* ── Resize handle — visible, not garish ──────────────────── */
+.sidebar-resize-handle {
+    width: 4px;
+    cursor: col-resize;
+    background: var(--border-color-subtle);
+    transition: background var(--motion-fast);
+    flex-shrink: 0;
+}
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle.is-dragging {
+    background: var(--border-color-strong);
+}
+
+/* ── Edge tabs (collapsed sensei / sidebar) ───────────────── */
+.layout-edge-tab {
+    width: 32px;
+    background: var(--surface-sunken);
+    border: none;
+    border-left: 1px solid var(--border-color);
+    color: var(--text-subtle);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 0;
+    transition: color var(--motion-fast), background var(--motion-fast);
+}
+.layout-edge-tab:hover {
+    color: var(--text);
+    background: var(--surface);
+}
+.layout-edge-tab--left { border-left: none; border-right: 1px solid var(--border-color); }
+
+/* Stronger hover for the left tab since it already has an accent base */
+.layout > #open-left-tab:hover {
+    color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 16%, var(--surface));
+}
+
+.layout-edge-tab__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
+/* ── Sigils default to neutral; agent color only on activity ── */
+/* The Wave 2 sigil swap added per-agent color via
+   `[data-agent="..."] .sigil-host { --agent-color: ... }`. That
+   defaulted every visible sigil to its agent color, even at rest.
+   Linear et al keep identity at REST in neutral and only flash
+   color when something is happening. Override: render in subtle
+   neutral by default, restore agent color on busy/active. */
+.sigil-host {
+    color: var(--text-subtle);
+}
+
+[data-agent="sensei"][data-status="busy"]    .sigil-host,
+[data-agent="scout"][data-status="busy"]     .sigil-host,
+[data-agent="blueprint"][data-status="busy"] .sigil-host,
+[data-agent="pixel"][data-status="busy"]     .sigil-host,
+[data-agent="forge"][data-status="busy"]     .sigil-host,
+[data-agent="cipher"][data-status="busy"]    .sigil-host,
+[data-agent="aegis"][data-status="busy"]     .sigil-host,
+[data-agent="vigil"][data-status="busy"]     .sigil-host,
+[data-agent="herald"][data-status="busy"]    .sigil-host {
+    color: var(--agent-color);
+}
+
+[data-agent].is-selected .sigil-host,
+[data-agent].selected .sigil-host,
+.is-live[data-agent] .sigil-host {
+    color: var(--agent-color);
+}
+
+/* Hover lifts the sigil into agent color too — a small reward
+   for cursor exploration without committing to selection. */
+[data-agent]:hover .sigil-host {
+    color: var(--agent-color);
+}
+
+/* ── Drop tacky effects in widely-used selectors ──────────── */
+/* Across command-center.css there are dozens of accent glows
+   (`box-shadow: 0 0 0 2px var(--accent-glow)`). Strip them at
+   the chrome level — keep them only on focus rings (input,
+   button:focus-visible) where they communicate meaningful
+   state. Anything decorative is suppressed. */
+.top-bar *,
+.sidebar--left *:not(input):not(button:focus-visible),
+.sensei-dock *:not(input):not(button:focus-visible) {
+    box-shadow: none !important;
+}
+
+/* But focus visibility must remain — restore for keyboard a11y */
+.top-bar input:focus-visible,
+.top-bar button:focus-visible,
+.sidebar--left input:focus-visible,
+.sidebar--left button:focus-visible,
+.sensei-dock input:focus-visible,
+.sensei-dock button:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent-ring) !important;
+    outline: none;
+}
+
+/* ── Selected / active list rows — single accent strip ──── */
+[data-panel="projects"] .project-row.is-selected,
+[data-panel="projects"] .project-row[aria-selected="true"],
+[data-panel="projects"] .project-item.is-selected,
+[data-panel="projects"] .project-item[aria-selected="true"] {
+    background: var(--accent-muted);
+    position: relative;
+}
+[data-panel="projects"] .project-row.is-selected::before,
+[data-panel="projects"] .project-row[aria-selected="true"]::before,
+[data-panel="projects"] .project-item.is-selected::before,
+[data-panel="projects"] .project-item[aria-selected="true"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+}
+
+/* ── Typography restraint ─────────────────────────────────
+ * The legacy renderer used the Instrument Serif display face for
+ * agent names + hero titles, which read as quirky/editorial in
+ * a dense workspace. Linear/Vercel/Claude Code keep agent labels
+ * in plain Inter at 600 weight — that's what we want.
+ *
+ * Also force capitalize on agent names so lower-case data
+ * ("scout") still reads as "Scout".
+ */
+.au-hero-name,
+.au-agent-name,
+.au-agent-title,
+.id-card-name,
+.id-card-title,
+.agent-mgmt-name,
+.agent-name,
+.agent-detail-title strong,
+.ch-agent-name,
+.ch-chat-header-name,
+.view-panel > .view-header h2,
+.view-panel > .view-header .view-header-sub,
+.view-header h2,
+.id-section-title,
+.au-sidebar-header,
+.ch-sidebar-header,
+[data-panel="projects"] > .panel-header h2,
+[data-panel="permissions"] > .panel-header h2,
+.panel > .panel-header h2 {
+    font-family: var(--font-sans) !important;
+    font-style: normal !important;
+}
+
+/* Specific overrides for view headers to drop the serif display face */
+.view-panel > .view-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+}
+
+.au-hero-name,
+.au-agent-name,
+.id-card-name,
+.agent-mgmt-name,
+.agent-name,
+.ch-agent-name,
+.ch-chat-header-name,
+.agent-detail-title strong {
+    text-transform: capitalize;
+    letter-spacing: -0.005em;
+}
+
+.au-hero-name {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* ── Orchestration flow restraint ─────────────────────────
+ * The orch-flow panel renders all 8 agent cards at full color
+ * regardless of activity. Mute everything to neutral; only the
+ * live (busy) state gets agent color. Idle agents read as a
+ * neutral roster, not a circus.
+ */
+.orch-flow-canvas .agent-card,
+.orch-flow-canvas .agent-node {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    color: var(--text);
+    box-shadow: none;
+}
+
+/* Live (busy) state: a thin accent ring + agent-color sigil */
+.orch-flow-canvas .agent-card.is-busy,
+.orch-flow-canvas .agent-card[data-status="busy"],
+.orch-flow-canvas .agent-node.is-busy,
+.orch-flow-canvas .agent-node[data-status="busy"] {
+    border-color: var(--accent);
+}
+
+/* Sensei card in orchestration flow — drop the gold halo */
+.orch-flow-canvas .sensei-card,
+.orch-flow-canvas [data-agent="sensei"] {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+/* ── Sensei status pill in dock ───────────────────────────
+ * Don't shout "READY" in green at full saturation; render it
+ * as a calm uppercase mono with a subtle dot.
+ */
+.sensei-dock .sensei-status {
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+}
+.sensei-dock .sensei-status::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-subtle);
+    margin-right: 6px;
+    vertical-align: 1px;
+}
+.sensei-dock .sensei-status.ready::before,
+.sensei-dock .sensei-status[data-status="ready"]::before {
+    background: var(--status-success);
+}
+.sensei-dock .sensei-status.busy::before,
+.sensei-dock .sensei-status[data-status="busy"]::before {
+    background: var(--accent);
+}
+
+/* ── Preview / Code toggle (approval queue + future) ────────
+ * Tabbed block for text that benefits from both formatted preview
+ * AND raw-source view. Used by the approval queue's project
+ * description + phase summary. Designed to fit inside any panel.
+ */
+.toggle-block {
+    margin: 8px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface);
+}
+.toggle-block__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 10px;
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--border-color);
+}
+.toggle-block__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+.toggle-block__tabs {
+    display: inline-flex;
+    gap: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--surface);
+    overflow: hidden;
+}
+.toggle-block__tab {
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--motion-fast), color var(--motion-fast);
+}
+.toggle-block__tab + .toggle-block__tab { border-left: 1px solid var(--border-color); }
+.toggle-block__tab:hover { color: var(--text); }
+.toggle-block__tab.is-active {
+    background: var(--surface-raised);
+    color: var(--text);
+}
+.toggle-block__body {
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.55;
+    max-height: 360px;
+    overflow: auto;
+}
+.toggle-block__body--preview p,
+.toggle-block__body--preview ul,
+.toggle-block__body--preview ol {
+    margin: 0 0 8px;
+}
+.toggle-block__body--preview p:last-child,
+.toggle-block__body--preview ul:last-child,
+.toggle-block__body--preview ol:last-child { margin-bottom: 0; }
+.toggle-block__body--preview code {
+    background: var(--surface-sunken);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+}
+.toggle-block__body--preview pre {
+    background: var(--surface-sunken);
+    padding: 8px 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+.toggle-block__body--code {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ── Approval-required pop-up alert ─────────────────────────
+ * Floats top-right when Sensei publishes approval.required so the
+ * user notices even if they're on a non-Mission-Control view.
+ */
+.approval-popup {
+    position: fixed;
+    top: 56px;
+    right: 16px;
+    z-index: 600;
+    width: 360px;
+    background: var(--surface-raised);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: approval-pop-in 200ms ease-out;
+}
+@keyframes approval-pop-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.approval-popup__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.approval-popup__title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+.approval-popup__close {
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+}
+.approval-popup__close:hover { color: var(--text); }
+.approval-popup__project { font-weight: 600; color: var(--text); }
+.approval-popup__phase { color: var(--text-muted); font-size: 11px; }
+.approval-popup__body { color: var(--text-muted); }
+.approval-popup__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+.approval-popup__btn {
+    background: var(--accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.approval-popup__btn--ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+.approval-popup__btn:hover { background: var(--accent-hover); color: var(--text-on-accent); }
+.approval-popup__btn--ghost:hover { color: var(--text); }
+
+/* ── Autonauts list — highlight the busy agent ──────────────
+ * Status semantics stay: green dot = busy, grey = idle, red = error.
+ * That's the signal the user is reading. The problem was the rest
+ * of the row looked identical regardless of status, so the busy
+ * agent didn't pop. Now the busy row gets:
+ *   - a 2px accent strip on the left edge
+ *   - sigil tinted in the agent's brand colour (instead of muted)
+ *   - agent name pulled to full white
+ *   - a faint accent-tinted row background so it visually advances
+ * Plus a steady pulse halo on the green dot to communicate live work.
+ */
+.au-agent-row--busy {
+    background: color-mix(in oklab, var(--accent) 8%, transparent);
+    position: relative;
+}
+.au-agent-row--busy::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+}
+.au-agent-row--busy .au-agent-thumb.sigil-host {
+    color: var(--agent-color, var(--accent));
+}
+.au-agent-row--busy .au-agent-name {
+    color: var(--text);
+}
+
+/* Pulse halo on the green busy dot (no colour change — keeps the
+ * green=active mental model). */
+.au-status-dot.au-status--busy {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--status-success) 25%, transparent);
+    animation: agent-dot-pulse 1.6s ease-in-out infinite;
+}
+@keyframes agent-dot-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px color-mix(in oklab, var(--status-success) 25%, transparent); }
+    50%      { box-shadow: 0 0 0 6px color-mix(in oklab, var(--status-success) 12%, transparent); }
+}
+
+.au-agent-row.au-agent-row--disabled .au-status-dot {
+    opacity: 0.3;
+}
+
+/* ── ThinkingRotator (Loader 3 · Stroke cascade + phrase) ───
+ * Inline indicator that pairs the design-pack kanji stroke loader
+ * with a rotating witty phrase. The five strokes draw in sequence
+ * then fade off; the last one (vertical) is the accent stroke.
+ */
+.kg-thinking {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 12px;
+}
+.kg-think-loader {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+.kg-stroke-anim {
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 80;
+    stroke-dashoffset: 80;
+    animation: kg-stroke-draw 2.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.kg-stroke-anim:nth-child(1) { animation-delay: 0s; }
+.kg-stroke-anim:nth-child(2) { animation-delay: 0.18s; }
+.kg-stroke-anim:nth-child(3) { animation-delay: 0.36s; }
+.kg-stroke-anim:nth-child(4) { animation-delay: 0.54s; }
+.kg-stroke-anim--accent {
+    animation-delay: 0.72s;
+    stroke: var(--accent);
+}
+@keyframes kg-stroke-draw {
+    0%   { stroke-dashoffset: 80;  opacity: 0; }
+    20%  { opacity: 1; }
+    50%, 60% { stroke-dashoffset: 0;   opacity: 1; }
+    85%, 100% { stroke-dashoffset: -80; opacity: 0; }
+}
+.kg-thinking-phrase {
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ── Activity feed — clickable rows + drill-in detail ───── */
+.activity-item--clickable {
+    cursor: pointer;
+    position: relative;
+    transition: background var(--motion-fast);
+}
+.activity-item--clickable:hover {
+    background: var(--surface-tint-soft);
+}
+.activity-chevron {
+    margin-left: auto;
+    color: var(--text-subtle);
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.7;
+}
+.activity-item--clickable:hover .activity-chevron { opacity: 1; color: var(--accent); }
+
+.activity-detail-header {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-subtle);
+}
+.activity-detail-channel { color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; }
+.activity-detail-message {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+.activity-detail-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+/* ── Light-theme overrides for the new chrome (pure neutral) ── */
+[data-theme="light"] .top-bar-brand .logo {
+    background: transparent;
+    border: none;
+}
+[data-theme="light"] .top-bar-brand .logo svg path:first-of-type {
+    stroke: rgba(0, 0, 0, 0.55);
+}
+[data-theme="light"] .top-bar-brand .logo svg rect {
+    fill: rgba(0, 0, 0, 0.85);
+}
+/* Mark C strokes inherit currentColor from .logo, which inherits
+   the top-bar text colour. Dark theme = slate ink; light theme =
+   near-black ink. No per-theme override needed.                  */
+
+/* ── Notification bell + popover (top-right) ─────────────────
+   Pure neutral chrome — single moss-green dot signals unread.
+   The popover is anchored to the top-right via `.top-bar` being
+   `position: relative`; click-away closes it.                 */
+.top-bar { position: relative; }
+
+/* ── Frameless window — reserve space for native window controls ──
+   Windows: titleBarOverlay paints min/max/close in a ~140px slot at
+   the top-right. macOS: traffic lights live top-left at ~78px wide.
+   We pad the top-bar so our own buttons / status pills don't sit
+   under (or get clicked through) the native controls.            */
+body.frameless-window.platform-win .top-bar {
+    padding-right: 140px;
+}
+body.frameless-window.platform-mac .top-bar {
+    padding-left: 88px;
+}
+
+/* Make sure interactive elements inside the drag region stay clickable.
+   The base .top-bar already sets `-webkit-app-region: drag`, so any
+   button / link / form control inside has to opt out. Most already do
+   via .top-bar-views, but keep this as a belt-and-braces rule. */
+body.frameless-window .top-bar button,
+body.frameless-window .top-bar a,
+body.frameless-window .top-bar select,
+body.frameless-window .top-bar input,
+body.frameless-window .top-bar [role="button"] {
+    -webkit-app-region: no-drag;
+}
+
+/* The base CSS marks .top-bar-status as `no-drag` (flex:1 spans the
+   entire middle of the bar) which leaves almost nothing draggable in
+   a frameless window. The status pills inside it are non-interactive
+   spans, so it's safe to flip the whole status block back to drag. */
+body.frameless-window .top-bar-status,
+body.frameless-window .top-bar-status .status-bar,
+body.frameless-window .top-bar-status .status-pill,
+body.frameless-window .top-bar-status .status-indicator,
+body.frameless-window .top-bar-status .status-stat,
+body.frameless-window .top-bar-status .status-version {
+    -webkit-app-region: drag;
+}
+
+/* Brand region — also needs drag, in case any child rule disables it. */
+body.frameless-window .top-bar-brand,
+body.frameless-window .top-bar-brand .logo,
+body.frameless-window .top-bar-brand h1,
+body.frameless-window .top-bar-brand .subtitle,
+body.frameless-window .top-bar-brand .brand-kanji {
+    -webkit-app-region: drag;
+}
+
+/* ── Light-theme orchestration flow ─────────────────────────
+   The SVG was drawn for a black canvas (rgba(255,255,255,*) ink),
+   so without these overrides the agent cards / edges / labels are
+   nearly invisible on the new pale background. We map every
+   `rgba(255,255,255,*)` ink shade to its `rgba(0,0,0,*)` mirror
+   with an extra contrast bump — not a 1:1 inversion.            */
+
+/* Agent card BACKGROUND (rgba(255,255,255,0.025) idle) */
+[data-theme="light"] .orch-flow-canvas svg [fill="rgba(255,255,255,0.025)"] {
+    fill: #FFFFFF;
+}
+/* Agent card BORDER (rgba(255,255,255,0.10) idle) — true black,
+   thicker so the card actually pops against the pale canvas. */
+[data-theme="light"] .orch-flow-canvas svg [stroke="rgba(255,255,255,0.10)"] {
+    stroke: #0A0A0A !important;
+    stroke-width: 1.5 !important;
+}
+/* Sigil ring + status dot (rgba(255,255,255,0.18)) */
+[data-theme="light"] .orch-flow-canvas svg [stroke="rgba(255,255,255,0.18)"] {
+    stroke: rgba(0, 0, 0, 0.55) !important;
+}
+[data-theme="light"] .orch-flow-canvas svg circle[fill="rgba(255,255,255,0.18)"] {
+    fill: rgba(0, 0, 0, 0.55);
+}
+/* Edge connector lines */
+[data-theme="light"] .orch-flow-canvas svg path[stroke="rgba(255,255,255,0.18)"],
+[data-theme="light"] .orch-flow-canvas svg line[stroke="rgba(255,255,255,0.18)"] {
+    stroke: rgba(0, 0, 0, 0.40);
+}
+/* Identity stripe */
+[data-theme="light"] .orch-flow-canvas svg [fill="rgba(255,255,255,0.22)"] {
+    fill: rgba(0, 0, 0, 0.45);
+}
+/* Sigil glyph idle. The orch-flow renderer sets the colour via an
+   inline `style="color: rgba(255,255,255,0.55);"` on the wrapping
+   <g>, then strokes/fills inside use currentColor. Inline-style
+   substring match is the only way to catch it from CSS — direct
+   attribute selectors don't fire because `fill` / `stroke` are
+   `currentColor`, not literal rgba.                              */
+[data-theme="light"] .orch-flow-canvas svg [style*="rgba(255,255,255,0.55)"] {
+    color: rgba(0, 0, 0, 0.78) !important;
+}
+[data-theme="light"] .orch-flow-canvas svg [fill="rgba(255,255,255,0.55)"] {
+    fill: rgba(0, 0, 0, 0.75);
+}
+
+/* Idle edge connector lines (`rgba(255,255,255,0.08)` stroke) — the
+   missing graph wires between Sensei and the agents. */
+[data-theme="light"] .orch-flow-canvas svg [stroke="rgba(255,255,255,0.08)"] {
+    stroke: rgba(0, 0, 0, 0.30) !important;
+}
+[data-theme="light"] .orch-flow-canvas svg path[stroke="rgba(255,255,255,0.08)"],
+[data-theme="light"] .orch-flow-canvas svg line[stroke="rgba(255,255,255,0.08)"] {
+    stroke: rgba(0, 0, 0, 0.30);
+}
+/* Agent name + role text */
+[data-theme="light"] .orch-flow-canvas svg [fill="rgba(255,255,255,0.85)"] {
+    fill: #0A0A0A;
+}
+[data-theme="light"] .orch-flow-canvas svg [fill="rgba(255,255,255,0.45)"] {
+    fill: rgba(0, 0, 0, 0.65);
+}
+[data-theme="light"] .orch-flow-canvas svg [fill="#fff"] {
+    fill: #0A0A0A;
+}
+/* Task-bar background pill (rgba(255,255,255,0.04)) */
+[data-theme="light"] .orch-flow-canvas svg [fill="rgba(255,255,255,0.04)"] {
+    fill: rgba(0, 0, 0, 0.05);
+}
+/* Phase strip — needs a light-on-white skin too */
+[data-theme="light"] .orch-flow-phasebar {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.10);
+    color: #4A4A4A;
+}
+[data-theme="light"] .orch-flow-statusbar {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.10);
+    color: #1A1A1A;
+}
+[data-theme="light"] .orch-flow-controls {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.10);
+}
+[data-theme="light"] .orch-flow-ctrl-btn {
+    color: #1A1A1A;
+}
+[data-theme="light"] .orch-flow-minimap {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+.btn-notification {
+    position: relative;
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--motion-fast) var(--ease),
+                color var(--motion-fast) var(--ease);
+}
+.btn-notification:hover {
+    background: var(--surface-tint-soft);
+    color: var(--text);
+}
+.btn-notification[aria-expanded="true"] {
+    background: var(--surface-tint-soft);
+    color: var(--text);
+}
+
+.btn-notification__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.btn-notification__badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--text-on-accent, #0A0A0A);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+    box-shadow: 0 0 0 2px var(--surface);
+    pointer-events: none;
+}
+.btn-notification__badge[hidden] { display: none; }
+
+.notif-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 12px;
+    width: 640px;
+    max-width: calc(100vw - 24px);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.notif-popover[hidden] { display: none; }
+
+.notif-popover__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color-subtle);
+    background: var(--surface-raised);
+}
+
+.notif-popover__title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.notif-popover__action {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background var(--motion-fast) var(--ease),
+                color var(--motion-fast) var(--ease);
+}
+.notif-popover__action:hover {
+    background: var(--surface-tint-soft);
+    color: var(--text);
+}
+
+.notif-popover__body {
+    max-height: 520px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* When popover hosts the notif-inbox, drop the inbox's own
+   border so the chrome is the popover frame, not nested rings. */
+.notif-popover__body .notif-inbox {
+    border: none;
+    border-radius: 0;
+    max-height: 520px;
+    background: transparent;
+    grid-template-columns: 240px 1fr;
+}
+
+/* Detail pane inside the popover — tighter padding, vertical
+   header stack so Approve/Reject never crashes into the title. */
+.notif-popover__body .notif-detail__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 16px;
+}
+.notif-popover__body .notif-detail__heading { gap: 10px; }
+.notif-popover__body .notif-detail__title { font-size: 14px; line-height: 1.35; }
+.notif-popover__body .notif-detail__sub { font-size: 11px; row-gap: 4px; }
+.notif-popover__body .notif-detail__chip {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.notif-popover__body .notif-detail__actions { gap: 6px; }
+.notif-popover__body .notif-detail__btn { padding: 5px 10px; font-size: 11px; }
+.notif-popover__body .notif-detail__body { padding: 12px 16px; font-size: 12px; }
+.notif-popover__body .notif-detail__p { font-size: 12px; line-height: 1.5; }
+
+.notif-popover__body .notif-row { padding: 10px 12px; }
+.notif-popover__body .notif-row__title { font-size: 12px; }
+.notif-popover__body .notif-row__summary { font-size: 11px; }
+
+[data-theme="light"] .notif-popover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Approval action feedback (pending/resolved states) ─────
+   Approve/Deny IPC roundtrips can take a few seconds — these
+   styles surface the in-flight + final state so the user gets
+   immediate visual acknowledgement. */
+.approval-item--working { cursor: progress; }
+.approval-item--resolved {
+    transition: opacity 240ms ease;
+}
+
+.badge--pending,
+.badge--approved,
+.badge--denied {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    border: 1px solid var(--border-color);
+}
+.badge--pending {
+    background: transparent;
+    color: var(--text-muted);
+}
+.badge--approved {
+    background: oklch(0.66 0.12 150 / 0.12);
+    color: var(--accent);
+    border-color: oklch(0.66 0.12 150 / 0.4);
+}
+.badge--denied {
+    background: rgba(220, 80, 80, 0.10);
+    color: #E58A8A;
+    border-color: rgba(220, 80, 80, 0.35);
+}
+
+.approval-pending-spinner {
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--border-color);
+    border-top-color: var(--text-muted);
+    border-radius: 50%;
+    animation: kg-approval-spin 720ms linear infinite;
+    display: inline-block;
+}
+@keyframes kg-approval-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ── Cost Intelligence — Models in use header ─────────────── */
+.ci-models {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.ci-models-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.ci-models-head .ci-breakdown-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex: 0 0 auto;
+}
+
+.ci-preset-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    padding: 2px 10px 2px 8px;
+    font-size: 11px;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color var(--motion-fast) var(--ease),
+                background var(--motion-fast) var(--ease);
+}
+.ci-preset-pill:hover {
+    background: var(--surface-tint-soft);
+    border-color: var(--border-color-strong, var(--border-color));
+}
+.ci-preset-pill__label {
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 10px;
+    font-weight: 600;
+}
+.ci-preset-pill__value {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.ci-models-link {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: pointer;
+}
+.ci-models-link:hover { color: var(--accent); text-decoration: underline; }
+
+.ci-model-list {
+    display: grid;
+    gap: 4px;
+}
+.ci-model-row {
+    display: grid;
+    grid-template-columns: 80px 90px 1fr;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 2px 0;
+}
+.ci-model-agent {
+    color: var(--text);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 11px;
+}
+.ci-model-provider {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.ci-model-name {
+    color: var(--text);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ci-models-empty {
+    padding: 8px 0;
+}
+
+.ci-explainer {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    background: var(--surface-tint-soft, rgba(255, 255, 255, 0.03));
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+.ci-explainer .ci-routing-link {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: none;
+}
+.ci-explainer .ci-routing-link:hover { text-decoration: underline; }
+
+/* ── Model Routing — preset editor modal ───────────────────── */
+.preset-editor-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.preset-editor-modal[hidden] { display: none; }
+
+.preset-editor-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.preset-editor-modal__sheet {
+    position: relative;
+    width: min(640px, calc(100vw - 24px));
+    max-height: calc(100vh - 48px);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.preset-editor-modal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color-subtle);
+}
+.preset-editor-modal__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+.preset-editor-modal__close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+.preset-editor-modal__close:hover { background: var(--surface-tint-soft); color: var(--text); }
+
+.preset-editor-modal__body {
+    padding: 14px 16px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.preset-editor-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.preset-editor-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.preset-editor-name {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+}
+.preset-editor-name:focus { outline: none; border-color: var(--accent); }
+.preset-editor-hint {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.preset-editor-grid {
+    border: 1px solid var(--border-color-subtle);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.preset-editor-grid__head,
+.preset-editor-row-item {
+    display: grid;
+    grid-template-columns: 90px 130px 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 10px;
+}
+.preset-editor-grid__head {
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--border-color-subtle);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.preset-editor-row-item + .preset-editor-row-item {
+    border-top: 1px solid var(--border-color-subtle);
+}
+.preset-editor-agent {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.preset-editor-provider,
+.preset-editor-model {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+}
+.preset-editor-provider:focus,
+.preset-editor-model:focus { outline: none; border-color: var(--accent); }
+
+.preset-editor-feedback {
+    min-height: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.preset-editor-modal__foot {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color-subtle);
+    background: var(--surface);
+}
+
+.preset-actions { margin-top: 4px; }
+.preset-delete-btn--danger:not([disabled]):hover {
+    color: #E58A8A;
+    border-color: rgba(220, 80, 80, 0.5);
+}
+
+/* ── Agent dossier — model alias hint ─────────────────────── */
+.au-config-hint {
+    margin: -2px 0 4px 0;
+    padding-left: calc(80px + 8px); /* align with the input column */
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+.au-config-input {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-size: 12px;
+}
+
+/* ── Agent dossier chat — markdown formatting + thinking ─── */
+.au-chat-msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-color-subtle);
+}
+.au-chat-msg--user {
+    background: oklch(0.66 0.12 150 / 0.08);
+    border-color: oklch(0.66 0.12 150 / 0.25);
+    margin-left: 32px;
+}
+.au-chat-msg--assistant {
+    margin-right: 32px;
+}
+.au-chat-msg--error {
+    background: rgba(220, 80, 80, 0.10);
+    border-color: rgba(220, 80, 80, 0.35);
+    color: #E58A8A;
+}
+
+.au-chat-msg-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+}
+.au-chat-msg-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.au-chat-msg-time {
+    color: var(--text-muted);
+}
+
+.au-chat-msg-body {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text);
+    word-break: break-word;
+}
+.au-chat-msg-body p:first-child { margin-top: 0; }
+.au-chat-msg-body p:last-child { margin-bottom: 0; }
+.au-chat-msg-body p { margin: 0 0 8px 0; }
+.au-chat-msg-body strong { color: var(--text); font-weight: 700; }
+.au-chat-msg-body code {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-size: 12px;
+    background: var(--surface-elev-2, rgba(255,255,255,0.04));
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+.au-chat-msg-body pre {
+    background: var(--surface-elev-2, rgba(255,255,255,0.04));
+    padding: 10px 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 6px 0;
+}
+.au-chat-msg-body pre code {
+    background: transparent;
+    padding: 0;
+}
+.au-chat-msg-body ul,
+.au-chat-msg-body ol {
+    margin: 4px 0 8px 0;
+    padding-left: 22px;
+}
+.au-chat-msg-body li { margin: 2px 0; }
+.au-chat-msg-body h1,
+.au-chat-msg-body h2,
+.au-chat-msg-body h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 8px 0 4px 0;
+    color: var(--text);
+}
+
+/* Typing row in agent dossier — kanji-stroke loader */
+.au-chat-msg--typing {
+    background: transparent;
+    border: 1px dashed var(--border-color-subtle);
+    margin-right: 32px;
+    padding: 8px 12px;
+}
+.au-chat-typing-host {
+    display: inline-block;
+    min-height: 22px;
+}
+
+/* ── Sensei dock chat — meta line for timestamps ─────────── */
+.sensei-msg-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    margin-bottom: 2px;
+}
+.sensei-msg-meta .sensei-msg-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.sensei-msg-meta .sensei-msg-time {
+    color: var(--text-muted);
+}
+.sensei-msg-text p:first-child { margin-top: 0; }
+.sensei-msg-text p:last-child { margin-bottom: 0; }
+.sensei-msg-text p { margin: 0 0 6px 0; }
+.sensei-msg-text strong { color: var(--text); font-weight: 700; }
+.sensei-msg-text code {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-size: 11px;
+    background: var(--surface-elev-2, rgba(255,255,255,0.04));
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+.sensei-msg-text ul,
+.sensei-msg-text ol {
+    margin: 4px 0;
+    padding-left: 18px;
+}
+
+/* ── New Project onboarding modal ──────────────────────── */
+.modal-overlay { padding: 24px; box-sizing: border-box; }
+
+.modal--onboarding {
+    width: clamp(640px, 60vw, 1100px) !important;
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 48px);
+    display: flex !important;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header + footer must not shrink so the body owns the scroll. */
+.modal--onboarding > .modal-header,
+.modal--onboarding > .modal-footer {
+    flex: 0 0 auto;
+}
+.modal--onboarding > .modal-footer {
+    border-top: 1px solid var(--border-color-subtle);
+    background: var(--surface);
+    padding: 12px 20px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.modal-body--onboarding {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 24px;
+    scrollbar-gutter: stable;
+}
+
+/* command-center.css applies text-transform:uppercase + letter-spacing
+   to all .modal-body label elements. Reset it completely for this modal
+   so child spans don't inherit the uppercase. */
+.modal-body--onboarding label,
+.modal-body--onboarding label * {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-size: unset;
+    font-weight: unset;
+    color: unset;
+    margin-bottom: unset;
+    margin-top: unset;
+    display: unset;
+}
+
+@media (min-width: 1600px) {
+    .modal--onboarding { width: clamp(800px, 50vw, 1280px) !important; }
+    .modal-body--onboarding { gap: 24px; padding: 24px 32px; }
+    .onboard-input,
+    .onboard-textarea,
+    .onboard-select { font-size: 14px; padding: 10px 12px; }
+    .onboard-textarea { min-height: 96px; }
+    .onboard-phases-grid { gap: 10px; }
+    .onboard-phase-label { font-size: 14px; }
+}
+
+@media (max-width: 760px) {
+    .modal--onboarding { width: calc(100vw - 24px) !important; max-width: none; }
+    .onboard-row--inline { grid-template-columns: 1fr; }
+    .onboard-phases-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        height: 240px;
+    }
+}
+
+.onboard-row { display: flex; flex-direction: column; gap: 5px; }
+.onboard-row--inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.onboard-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.onboard-field--narrow { min-width: 0; }
+
+.onboard-field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary, #8A8A8A);
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.4;
+    margin: 0;
+}
+.onboard-field-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.onboard-required { color: var(--accent); margin-left: 2px; }
+
+.onboard-input,
+.onboard-textarea,
+.onboard-select {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font-sans, system-ui, sans-serif);
+    width: 100%;
+    box-sizing: border-box;
+    text-transform: none;
+    letter-spacing: 0;
+}
+/* Chevron for native <select>. Chromium's default arrow disappears on
+ * dark themes with transparent backgrounds — operators couldn't tell the
+ * select apart from a text input (Pillar 2.2 P0 smoke blocker). */
+.onboard-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2391b1ff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><polyline points='5 8 10 13 15 8'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px 16px;
+    cursor: pointer;
+}
+.onboard-select::-ms-expand { display: none; }
+.onboard-select option {
+    background: var(--surface, #1b1f24);
+    color: var(--text);
+}
+.onboard-textarea {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 80px;
+}
+.onboard-input:focus,
+.onboard-textarea:focus,
+.onboard-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Phases fieldset */
+.onboard-phases {
+    border: 1px solid var(--border-color-subtle);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 0;
+}
+.onboard-phases legend {
+    padding: 0 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary, #8A8A8A);
+    text-transform: none;
+    letter-spacing: 0;
+}
+.onboard-phases > .onboard-field-hint {
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* 3-column grid, 2 equal rows via explicit height */
+.onboard-phases-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    height: 148px;
+    gap: 8px;
+}
+
+/* Each card: checkbox pinned top-left, label + hint stacked beside it */
+.onboard-phase {
+    display: grid;
+    grid-template-columns: 14px 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 7px;
+    row-gap: 2px;
+    align-content: center;
+    padding: 10px 12px;
+    background: transparent;
+    border: 1px solid var(--border-color-subtle);
+    border-radius: 6px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 120ms ease;
+}
+.onboard-phase:hover { border-color: var(--border-color); }
+.onboard-phase:has(input:checked) { border-color: oklch(0.66 0.12 150 / 0.5); }
+
+/* All checkboxes inside the onboarding modal: green accent */
+.modal--onboarding input[type="checkbox"] {
+    accent-color: #4ade80;
+    cursor: pointer;
+}
+
+/* Phase card checkbox: grid placement */
+.onboard-phase input[type="checkbox"] {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+}
+.onboard-phase-label {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.onboard-phase-hint {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.onboard-phase-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+.onboard-phase-presets button {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+    transition: border-color 120ms ease, color 120ms ease;
+}
+.onboard-phase-presets button:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+/* ── #165 stage 2 — Phases & Tasks tree + Quick presets ── */
+.onboard-quick-presets {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 12px;
+}
+.onboard-quick-presets-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 4px;
+}
+.onboard-quick-preset-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.onboard-quick-preset-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+.onboard-quick-preset-btn.is-active {
+    color: var(--text);
+    border-color: oklch(0.66 0.12 150 / 0.7);
+    background: oklch(0.66 0.12 150 / 0.10);
+}
+.onboard-active-preset {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.onboard-phase-task-tree {
+    display: grid;
+    gap: 6px;
+    margin-top: 4px;
+}
+.onboard-phase-block {
+    border: 1px solid var(--border-color-subtle);
+    border-radius: 6px;
+    background: transparent;
+    overflow: hidden;
+}
+.onboard-phase-block[open] {
+    border-color: var(--border-color);
+}
+.onboard-phase-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    user-select: none;
+}
+.onboard-phase-summary::-webkit-details-marker { display: none; }
+.onboard-phase-summary::marker { display: none; }
+.onboard-phase-summary::before {
+    content: '▸';
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 120ms ease;
+    width: 10px;
+    display: inline-block;
+}
+.onboard-phase-block[open] > .onboard-phase-summary::before {
+    transform: rotate(90deg);
+}
+.onboard-phase-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text);
+}
+.onboard-phase-toggle input[type="checkbox"] { margin: 0; }
+.onboard-phase-summary .onboard-phase-label {
+    font-weight: 500;
+    color: var(--text);
+}
+.onboard-phase-summary .onboard-phase-hint {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+.onboard-phase-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color-subtle);
+    background: transparent;
+}
+.onboard-phase-count.is-partial {
+    color: var(--text);
+    border-color: oklch(0.66 0.12 150 / 0.6);
+    background: oklch(0.66 0.12 150 / 0.12);
+}
+.onboard-phase-count.is-empty {
+    color: var(--text-muted);
+    border-style: dashed;
+}
+
+.onboard-phase-body {
+    padding: 8px 12px 12px 28px;
+    border-top: 1px solid var(--border-color-subtle);
+    background: transparent;
+}
+.onboard-task-actions {
+    display: flex;
+    gap: 6px;
+    margin: 2px 0 8px;
+}
+.onboard-task-action {
+    background: transparent;
+    border: 1px solid var(--border-color-subtle);
+    color: var(--text-muted);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.onboard-task-action:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+/* Scrollable per-phase task list — keeps the modal compact when a phase has 15+ tasks. */
+.onboard-task-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2px 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 8px 4px 2px;
+    border: 1px solid var(--border-color-subtle);
+    border-radius: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.onboard-task-grid::-webkit-scrollbar { width: 8px; }
+.onboard-task-grid::-webkit-scrollbar-track { background: transparent; }
+.onboard-task-grid::-webkit-scrollbar-thumb {
+    background: var(--border-color-subtle);
+    border-radius: 4px;
+}
+.onboard-task-grid::-webkit-scrollbar-thumb:hover { background: var(--border-color); }
+.onboard-task {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    column-gap: 8px;
+    align-items: center;
+    padding: 4px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.onboard-task:hover { background: oklch(from var(--accent) l c h / 0.06); }
+.onboard-task-label {
+    font-size: 12px;
+    color: var(--text);
+}
+.onboard-task-agent {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: transparent;
+    border: 1px solid var(--border-color-subtle);
+    border-radius: 3px;
+    padding: 1px 5px;
+}
+
+/* Flat checkbox — no background, just a light grey border. */
+.onboard-phase-toggle input[type="checkbox"],
+.onboard-task input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    display: inline-grid;
+    place-content: center;
+    transition: border-color 120ms ease;
+}
+.onboard-phase-toggle input[type="checkbox"]:hover,
+.onboard-task input[type="checkbox"]:hover {
+    border-color: var(--accent);
+}
+.onboard-phase-toggle input[type="checkbox"]:focus-visible,
+.onboard-task input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+.onboard-phase-toggle input[type="checkbox"]::before,
+.onboard-task input[type="checkbox"]::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    transform: scale(0);
+    transition: transform 80ms ease-in;
+    box-shadow: inset 8px 8px var(--text);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+.onboard-phase-toggle input[type="checkbox"]:checked::before,
+.onboard-task input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+.onboard-phase-toggle input[type="checkbox"]:checked,
+.onboard-task input[type="checkbox"]:checked {
+    border-color: var(--text);
+}
+
+@media (max-width: 760px) {
+    .onboard-phase-summary { flex-wrap: wrap; }
+    .onboard-task-grid { grid-template-columns: 1fr; max-height: 260px; }
+}
+
+/* Optional details accordion */
+.onboard-optional {
+    border: 1px solid var(--border-color-subtle);
+    border-radius: 6px;
+    background: transparent;
+}
+.onboard-optional > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    user-select: none;
+}
+.onboard-optional > summary::-webkit-details-marker { display: none; }
+.onboard-optional > summary::before {
+    content: '\25B8';
+    display: inline-block;
+    margin-right: 6px;
+    transition: transform 120ms ease;
+}
+.onboard-optional[open] > summary::before { transform: rotate(90deg); }
+.onboard-optional[open] > summary { border-bottom: 1px solid var(--border-color-subtle); }
+.onboard-optional-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ── Live HUD ───────────────────────────────────────────
+   A small event-driven cluster sitting inside the existing top-bar
+   status row. Every onActivityEvent / onAgentStreamEvent calls
+   pulseLiveHud() in status-bar.ts, which adds .is-pulsing to the
+   .status-hud__live dot for one keyframe cycle. */
+
+.status-hud {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: 14px;
+    padding-left: 14px;
+    border-left: 1px solid var(--border-color-subtle);
+    -webkit-app-region: no-drag;
+    min-width: 0;
+}
+
+.status-hud__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.status-hud__live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: oklch(0.66 0.16 150);
+    box-shadow: 0 0 0 0 oklch(0.66 0.16 150 / 0.55);
+    transition: background 200ms ease;
+}
+
+.status-hud__live.is-pulsing .status-hud__live-dot {
+    animation: kg-hud-live-pulse 900ms ease-out 1;
+}
+
+@keyframes kg-hud-live-pulse {
+    0%   { box-shadow: 0 0 0 0   oklch(0.66 0.16 150 / 0.65); transform: scale(1); }
+    60%  { box-shadow: 0 0 0 8px oklch(0.66 0.16 150 / 0);    transform: scale(1.4); }
+    100% { box-shadow: 0 0 0 0   oklch(0.66 0.16 150 / 0);    transform: scale(1); }
+}
+
+.status-hud__metric {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.status-hud__metric-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.status-hud__metric-label {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.status-hud__latest {
+    display: inline-block;
+    max-width: clamp(180px, 28vw, 460px);
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
+.status-hud__latest.is-fading {
+    opacity: 1;
+    animation: kg-hud-latest-fade 6000ms linear 1 forwards;
+}
+
+@keyframes kg-hud-latest-fade {
+    0%   { opacity: 1; }
+    66%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Frameless window: HUD must explicitly stay no-drag so its text is
+   selectable / clickable, even though the surrounding status bar is
+   marked drag. */
+body.frameless-window .top-bar-status .status-hud,
+body.frameless-window .top-bar-status .status-hud * {
+    -webkit-app-region: no-drag;
+}
+
+/* ── Orch-flow agent card pulse ──────────────────────────
+   The radial layout uses <g class="orch-agent-node" data-agent="id">.
+   pulseOrchFlowAgent() in command-center.ts adds .is-pulsing for 1.5s
+   when an event for that agent arrives (task.* or agent.stream). */
+
+g.orch-agent-node.is-pulsing > rect.agent-card-bg {
+    animation: kg-orch-card-pulse 1500ms ease-out 1;
+}
+
+@keyframes kg-orch-card-pulse {
+    0%   { filter: drop-shadow(0 0 0   oklch(0.66 0.16 150 / 0.0));  stroke-width: 1; }
+    25%  { filter: drop-shadow(0 0 8px oklch(0.66 0.16 150 / 0.65)); stroke-width: 2; }
+    100% { filter: drop-shadow(0 0 0   oklch(0.66 0.16 150 / 0.0));  stroke-width: 1; }
+}
+
+/* ── Project List — macOS refinements ─────────────────────────────
+ * Goal: quieter, denser, SF-native feel. Badges step back; names lead. */
+
+/* Card: tighter, no heavy divider */
+.sidebar--left .project-card {
+    padding: 8px 12px;
+    border-bottom: 1px solid color-mix(in oklab, var(--border-color) 60%, transparent);
+}
+
+/* Project name: system-ui, medium weight, slightly muted */
+.sidebar--left .project-card .project-name,
+.sidebar--left .project-card .project-name-text {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+}
+
+/* Phase badges (badge-green / badge-blue / badge-yellow / badge-gray):
+ * Quieter pill — same hue, much lower background fill, lighter weight. */
+.sidebar--left .badge-green,
+.sidebar--left .badge-blue,
+.sidebar--left .badge-yellow,
+.sidebar--left .badge-red,
+.sidebar--left .badge-gray {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+    border: none;
+    opacity: 0.75;
+}
+
+/* Status badges (CANCELLED, COMPLETED, etc.): keep readable, just calmer.
+ * Use lower-opacity background via the existing token + reduce font weight. */
+.sidebar--left .project-status-badge {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: lowercase;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: none;
+    opacity: 0.72;
+}
+
+/* Task count: even quieter */
+.sidebar--left .project-card .task-count {
+    font-size: 10px;
+    color: var(--text-subtle);
+    margin-top: 3px;
+}
+
+/* Docs / graph emoji buttons: grayscale, low-key */
+.sidebar--left .btn-docs,
+.sidebar--left .btn-graph {
+    filter: grayscale(1) opacity(0.45);
+    font-size: 12px;
+    transition: filter var(--motion-fast), color var(--motion-fast);
+}
+.sidebar--left .btn-docs:hover,
+.sidebar--left .btn-graph:hover {
+    filter: grayscale(0) opacity(1);
+    color: var(--accent);
+}
+
+/* Artifacts button: SVG folder icon, always monochrome */
+.sidebar--left .btn-artifacts {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-subtle);
+    padding: 2px 4px;
+    transition: color var(--motion-fast);
+}
+.sidebar--left .btn-artifacts:hover { color: var(--accent); }
+
+/* Project meta row: tighter gap */
+.sidebar--left .project-meta {
+    gap: 4px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+/* Action buttons (Archive / Delete): smaller, no heavy border */
+.sidebar--left .project-action-btn {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 5px;
+}
+
+/* Edit pencil button: quieter */
+.sidebar--left .btn-edit {
+    opacity: 0.4;
+    font-size: 11px;
+}
+.sidebar--left .btn-edit:hover { opacity: 1; }
+
+/* ── Config view tabs (General | Permissions) ──────────────────── */
+.config-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 24px;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.config-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-subtle);
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 14px 9px;
+    margin-bottom: -1px;
+    transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.config-tab:hover { color: var(--text); }
+
+.config-tab--active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+}
+
+.config-tab-panel { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* ── Code Graph Panel — compact project rows + inline viewer ── */
+
+.cg-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    border: 1px solid var(--border-subtle, rgba(255,255,255,0.07));
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+/* Single-row card — name on left, meta+badge+buttons on right */
+.cg-card {
+    background: var(--surface-2, rgba(255,255,255,0.02));
+    transition: background 100ms ease;
+}
+
+.cg-card:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+.cg-card-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    min-height: 40px;
+}
+
+.cg-card-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1 1 160px;
+}
+
+.cg-card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.cg-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Badges */
+.cg-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.cg-badge--idle     { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+.cg-badge--building { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.cg-badge--ready    { background: rgba(74,222,128,0.12); color: #4ade80; }
+.cg-badge--error    { background: rgba(248,113,113,0.12); color: #f87171; }
+
+/* Buttons group */
+.cg-card-btns {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.cg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 100ms ease, color 100ms ease, opacity 100ms ease;
+    white-space: nowrap;
+    height: 24px;
+}
+
+.cg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.cg-btn-build {
+    background: transparent;
+    border: 1px solid var(--border, rgba(255,255,255,0.12));
+    color: var(--text-muted);
+}
+.cg-btn-build:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+.cg-btn-open {
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.3);
+    color: #4ade80;
+}
+.cg-btn-open:hover { background: #4ade80; color: #000; }
+
+/* Live build log (inline, below the row) */
+.cg-log {
+    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    font-size: 10px;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.05));
+    padding: 6px 12px;
+    margin: 0;
+    max-height: 120px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.6;
+}
+
+/* ── Inline graph viewer — macOS-inspired panel ── */
+
+.cg-viewer {
+    border: 1px solid var(--border-color, rgba(255,255,255,0.10));
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 580px;
+    margin-top: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* macOS-style title bar — centered title, traffic-light close on left */
+.cg-viewer-bar {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    height: 36px;
+    background: var(--surface-raised, #252526);
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    flex-shrink: 0;
+    position: relative;
+}
+
+.cg-viewer-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted, #9d9d9d);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60%;
+    pointer-events: none;
+}
+
+/* macOS traffic-light close button (red circle) */
+.cg-viewer-close {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff5f57;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: filter 120ms ease;
+    position: relative;
+}
+.cg-viewer-close:hover { filter: brightness(1.15); }
+
+/* × glyph appears on hover inside the dot */
+.cg-viewer-close-dot {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    line-height: 1;
+    color: rgba(0,0,0,0);
+    font-weight: 700;
+}
+.cg-viewer-close:hover .cg-viewer-close-dot { color: rgba(0,0,0,0.5); }
+.cg-viewer-close-dot::after { content: '×'; }
+
+.cg-viewer-spacer { flex: 1; }
+
+.cg-viewer-frame {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    background: #141414;
+    min-width: 0;
+}
+
+/* v0.1.34 — expand/collapse toggle.
+ * v0.1.35: bump top inset to clear the Electron title bar on Windows
+ * (default ~32 px) so the viewer's own title bar — and the close /
+ * expand buttons on it — is always reachable. */
+.cg-viewer--expanded {
+    position: fixed;
+    top: 48px;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 9999;
+    height: auto !important;
+    margin: 0;
+}
+
+.cg-viewer-btn {
+    background: transparent;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.10));
+    color: var(--text-muted, #9d9d9d);
+    width: 26px;
+    height: 22px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 120ms ease;
+    margin-left: 6px;
+}
+.cg-viewer-btn:hover {
+    color: var(--text, #d4d4d4);
+    border-color: rgba(255,255,255,0.20);
+    background: rgba(255,255,255,0.04);
+}
+
+/* v0.1.34 — body wraps iframe + side pane so they sit side-by-side */
+.cg-viewer-body {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* v0.1.34 — side pane: shows source file for the clicked graph node */
+.cg-viewer-side {
+    width: 480px;
+    min-width: 320px;
+    max-width: 50%;
+    border-left: 1px solid var(--border-color, rgba(255,255,255,0.10));
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 160ms ease;
+}
+.cg-viewer-side--hidden {
+    width: 0;
+    min-width: 0;
+    border-left: 0;
+    overflow: hidden;
+}
+
+.cg-side-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    height: 32px;
+    background: var(--surface-raised, #252526);
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    flex-shrink: 0;
+}
+.cg-side-title {
+    flex: 1;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--text, #d4d4d4);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cg-side-close {
+    width: 20px;
+    height: 20px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted, #9d9d9d);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    border-radius: 4px;
+    transition: all 120ms ease;
+}
+.cg-side-close:hover {
+    color: var(--text, #d4d4d4);
+    background: rgba(255,255,255,0.06);
+}
+
+.cg-side-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    background: #1e1e1e;
+    flex-shrink: 0;
+}
+.cg-side-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.10);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--text, #d4d4d4);
+    background: #141414;
+}
+.cg-side-chip--muted {
+    color: var(--text-faint, #6e6e6e);
+    border-color: rgba(255,255,255,0.06);
+}
+
+.cg-side-content {
+    flex: 1;
+    margin: 0;
+    padding: 14px 16px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--text, #d4d4d4);
+    background: #141414;
+    overflow: auto;
+    white-space: pre;
+}
+
+/* ── KB sidebar resize handle ── */
+
+.kb-resize-handle {
+    width: 4px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 120ms ease;
+    position: relative;
+    z-index: 1;
+}
+
+.kb-resize-handle:hover,
+.kb-resize-handle:active {
+    background: var(--accent, oklch(0.66 0.12 150));
+}
+
+/* ── Top-bar user pill + dropdown menu ─────────────────────────
+   Shows the signed-in user (avatar initials + first-name) and a
+   small caret. Click toggles a dropdown with email + plan + Sign out.
+   Position is anchored relative to the .top-bar (which is itself
+   position: relative via the existing rule above).
+─────────────────────────────────────────────────────────────── */
+
+.btn-user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 4px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--text, #d4d4d4);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 140ms ease, border-color 140ms ease;
+}
+.btn-user-pill:hover {
+    background: var(--surface-raised, rgba(255, 255, 255, 0.04));
+    border-color: var(--border-color, rgba(255, 255, 255, 0.08));
+}
+.btn-user-pill[aria-expanded="true"] {
+    background: var(--surface-raised, rgba(255, 255, 255, 0.06));
+    border-color: var(--border-color, rgba(255, 255, 255, 0.10));
+}
+
+.user-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: oklch(0.66 0.12 150);   /* moss-green accent */
+    color: #0a0a0a;
+    font-weight: 600;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+.user-name {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.user-caret {
+    width: 10px;
+    height: 10px;
+    opacity: 0.5;
+    flex-shrink: 0;
+    transition: transform 140ms ease, opacity 140ms ease;
+}
+.btn-user-pill:hover .user-caret { opacity: 0.85; }
+.btn-user-pill[aria-expanded="true"] .user-caret {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.user-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 12px;
+    min-width: 240px;
+    background: var(--surface, #1e1e1e);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.10));
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45),
+                0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    overflow: hidden;
+    font-size: 12px;
+}
+.user-menu[hidden] { display: none; }
+
+.user-menu__head {
+    padding: 14px 14px 12px;
+    border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+}
+.user-menu__name {
+    color: var(--text, #d4d4d4);
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.user-menu__email {
+    color: var(--text-muted, #9d9d9d);
+    font-size: 11.5px;
+    word-break: break-all;
+    margin-bottom: 8px;
+}
+.user-menu__plan {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(91, 179, 119, 0.12);
+    border: 1px solid rgba(91, 179, 119, 0.32);
+    border-radius: 999px;
+    color: oklch(0.66 0.12 150);
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.user-menu__item {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    color: var(--text, #d4d4d4);
+    font-family: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 100ms ease;
+}
+.user-menu__item:hover {
+    background: var(--surface-hover, rgba(255, 255, 255, 0.04));
+}
+
+/* Open-core funnel (open build only) — contextual Cloud upsell + community star. */
+.user-menu__promo {
+    padding: 11px 14px;
+    background: rgba(91, 179, 119, 0.06);
+    border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+    border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+}
+.user-menu__promo-title {
+    color: oklch(0.66 0.12 150);
+    font-weight: 600;
+    font-size: 11.5px;
+    margin-bottom: 3px;
+}
+.user-menu__promo-body {
+    color: var(--text-muted, #9d9d9d);
+    font-size: 11px;
+    line-height: 1.45;
+}
+.user-menu__item--cta {
+    color: oklch(0.66 0.12 150);
+    font-weight: 600;
+}
+.user-menu__item--star {
+    color: var(--text-muted, #9d9d9d);
+    border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+}

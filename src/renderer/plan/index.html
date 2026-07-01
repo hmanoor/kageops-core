@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none';" />
+    <title>KageOps — Choose your plan</title>
+    <link rel="stylesheet" href="plan.css" />
+</head>
+<body>
+    <div id="app">
+        <header class="plan-header">
+            <div class="brand-row">
+                <svg class="sigil" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                    <g stroke="#5BB377" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" vector-effect="non-scaling-stroke">
+                        <path d="M14 16 L34 16 L34 32 L18 32"/>
+                        <path d="M22 22 L30 22"/>
+                        <path d="M40 14 L40 44"/>
+                        <path d="M44 18 L48 14"/>
+                        <path d="M44 30 L48 26"/>
+                        <path d="M44 42 L48 38"/>
+                    </g>
+                    <path d="M22 40 L34 40 L28 50 Z" fill="#5BB377"/>
+                </svg>
+                <span class="brand">KageOps</span>
+            </div>
+            <div class="annual-toggle">
+                <span class="toggle-label">Monthly</span>
+                <button id="toggle-annual" class="toggle-btn" role="switch" aria-checked="false">
+                    <span class="toggle-thumb"></span>
+                </button>
+                <span class="toggle-label">Annual <span class="badge-save">Save 20%</span></span>
+            </div>
+        </header>
+
+        <main class="plan-grid">
+            <!-- Free -->
+            <div class="plan-card" data-tier="free">
+                <div class="plan-name">Free</div>
+                <div class="plan-price"><span class="price-amount">$0</span><span class="price-period">USD/mo</span></div>
+                <ul class="plan-features">
+                    <li>1 active project</li>
+                    <li>All 9 Autonauts</li>
+                    <li>Solo (1 seat)</li>
+                    <li>BYO API keys</li>
+                </ul>
+                <button class="plan-btn btn-secondary" id="btn-free">Start free</button>
+            </div>
+
+            <!-- Starter -->
+            <div class="plan-card" data-tier="starter">
+                <div class="plan-name">Starter</div>
+                <div class="plan-price">
+                    <span class="price-amount" data-monthly="12" data-annual="10">$12</span>
+                    <span class="price-period">USD/mo</span>
+                </div>
+                <ul class="plan-features">
+                    <li>Unlimited active projects</li>
+                    <li>2 seats (you + 1)</li>
+                    <li>APO prompt optimisation</li>
+                    <li>Cost intelligence dashboards</li>
+                </ul>
+                <button class="plan-btn btn-primary" data-tier="starter">Start 30-day trial</button>
+            </div>
+
+            <!-- Team -->
+            <div class="plan-card featured" data-tier="team">
+                <div class="plan-badge">Most popular</div>
+                <div class="plan-name">Team</div>
+                <div class="plan-price">
+                    <span class="price-amount" data-monthly="39" data-annual="33">$39</span>
+                    <span class="price-period">USD/mo</span>
+                </div>
+                <ul class="plan-features">
+                    <li>10 seats ($3.90/seat)</li>
+                    <li>Shared Sensei chat</li>
+                    <li>Task comments + claims</li>
+                    <li>Slack / Discord / Teams connectors</li>
+                </ul>
+                <button class="plan-btn btn-accent" data-tier="team">Start 30-day trial</button>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="plan-card" data-tier="enterprise">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-price"><span class="price-amount">$99</span><span class="price-period">USD/mo</span></div>
+                <ul class="plan-features">
+                    <li>Unlimited seats</li>
+                    <li>SSO (Entra / Okta / Google WS / SAML)</li>
+                    <li>Azure burst compute</li>
+                    <li>Audit logs + priority support</li>
+                </ul>
+                <button class="plan-btn btn-secondary" data-tier="enterprise">Start 30-day trial</button>
+            </div>
+        </main>
+
+        <footer class="plan-footer">
+            All paid plans include a <strong>30-day free trial</strong>. Card required at checkout — auto-converts to paid if you don't cancel before day 31. No card required for Free.
+            <br /><span style="opacity:0.7;font-size:0.9em">BYOK — your AI provider bill (Anthropic, OpenAI, OpenRouter, Ollama, Gemini) stays on your own account. Prices above are KageOps only.</span>
+        </footer>
+
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <span>Opening checkout…</span>
+            <button id="btn-cancel-checkout" class="btn-cancel-checkout">Cancel</button>
+        </div>
+
+        <div id="error-banner" class="error-banner hidden"></div>
+    </div>
+
+    <script src="plan.js"></script>
+</body>
+</html>

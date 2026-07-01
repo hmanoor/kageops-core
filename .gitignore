@@ -1,0 +1,94 @@
+node_modules/
+dist/
+*.js.map
+.env
+.env.*
+ai_provider_key
+ai_provider_key.txt
+*.log
+*.tsbuildinfo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Electron
+out/
+release/
+
+# Secrets
+credentials.json
+*.pem
+*.key
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+
+# KageOps data (runtime)
+*.db
+*.sqlite
+projects/
+template/.git/
+
+# Docker volumes (local)
+kageops_data/
+ollama_models/
+
+# Keep .env.example, ignore actual .env files
+!.env.example
+vitest-result.json
+
+# Real test credentials must never be committed — keep them in ~/.kageops/.
+# (Belt-and-braces: the canonical home is outside the repo entirely.)
+*_keys*.txt
+docs/*_keys*.txt
+
+# electron-builder outputs
+release/
+build/icon.icns
+build/icon.ico
+*.AppImage
+*.dmg
+*.deb
+
+# Playwright E2E artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+
+.vercel/
+*.pfx
+*.p12
+*.cer
+*.certSigningRequest
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+
+# Cloudflare Wrangler local cache
+api/.wrangler/
+.wrangler/
+
+# Local electron-builder dev output (final installers ship via CI → R2
+# at dl.kageops.ai; the local releases/ tree is throwaway).
+releases/
+
+# Scratch debug scripts at repo root — naming convention is `query-*.ts`
+# / `query-*.mjs` for one-off DB probes. Promote to scripts/ with a
+# proper name + header comment if a probe is worth keeping.
+/query-*.ts
+/query-*.mjs
+
+# Scratch project briefs + dev playground inputs under scripts/. The
+# leading underscore is the convention for "don't commit me" — these
+# are local experiment specs (`_donedeck-spec.txt`, `_jeeva-spec.txt`,
+# etc.) that feed the headless runner during benchmarking.
+scripts/_*

@@ -1,0 +1,6 @@
+#!/bin/sh
+# KageOps pre-commit secret scanner (security gate S1).
+# Wired via `git config core.hooksPath .githooks` (run automatically by the
+# `prepare` npm script on install). Scans only staged files — fast.
+# To bypass in an emergency: `git commit --no-verify` (avoid for real secrets).
+exec npx tsx scripts/secret-scan.ts --staged

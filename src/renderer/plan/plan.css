@@ -1,0 +1,319 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --surface-sunken: #141414;
+    --surface:        #1e1e1e;
+    --surface-raised: #252526;
+    --border:         rgba(255,255,255,0.08);
+    --border-strong:  rgba(255,255,255,0.14);
+    --accent:         #4d9e6f;
+    --accent-hover:   #5ab57e;
+    --text:           #d4d4d4;
+    --text-muted:     #9d9d9d;
+    --text-subtle:    #6e6e6e;
+    --danger:         #e05252;
+    --amber:          #e5a550;
+    --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+html, body {
+    width: 700px;
+    height: 500px;
+    overflow: hidden;
+    background: var(--surface-sunken);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px 24px 16px;
+    position: relative;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+
+.plan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    /* Reserve space for the native Windows titlebar overlay buttons (~138 px).
+       The header doubles as the drag region so the window is still movable. */
+    padding-right: 140px;
+    -webkit-app-region: drag;
+    user-select: none;
+}
+
+.brand-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    -webkit-app-region: no-drag;
+}
+
+.annual-toggle { -webkit-app-region: no-drag; }
+
+.sigil { width: 24px; height: 24px; flex-shrink: 0; }
+
+.brand {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+/* ── Annual toggle ────────────────────────────────────── */
+
+.annual-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.toggle-btn {
+    position: relative;
+    width: 32px;
+    height: 18px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.toggle-btn[aria-checked="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: transform 160ms var(--ease), background 160ms var(--ease);
+}
+
+.toggle-btn[aria-checked="true"] .toggle-thumb {
+    transform: translateX(14px);
+    background: #fff;
+}
+
+.badge-save {
+    background: rgba(77,158,111,0.18);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* ── Plan grid ───────────────────────────────────────── */
+
+.plan-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    flex: 1;
+}
+
+.plan-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 160ms var(--ease);
+}
+
+.plan-card.featured {
+    border-color: var(--accent);
+    background: rgba(77,158,111,0.06);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+}
+
+.plan-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.price-amount {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    transition: opacity 120ms;
+}
+
+.price-period {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.plan-features {
+    list-style: none;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.plan-features li {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding-left: 12px;
+    position: relative;
+}
+
+.plan-features li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+}
+
+/* ── Buttons ──────────────────────────────────────────── */
+
+.plan-btn {
+    width: 100%;
+    padding: 7px 0;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background 120ms var(--ease), opacity 120ms;
+}
+
+.plan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+}
+
+.btn-primary:hover:not(:disabled) { background: rgba(255,255,255,0.06); }
+
+.btn-accent {
+    background: var(--accent);
+    color: #fff;
+}
+
+.btn-accent:hover:not(:disabled) { background: var(--accent-hover); }
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) { color: var(--text); border-color: var(--border-strong); }
+
+/* ── Footer ──────────────────────────────────────────── */
+
+.plan-footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-subtle);
+    padding-top: 12px;
+}
+
+/* ── Loading overlay ─────────────────────────────────── */
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20,20,20,0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-radius: var(--radius-lg);
+}
+
+.loading-overlay.hidden { display: none; }
+
+.btn-cancel-checkout {
+    background: transparent;
+    color: var(--text-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 5px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: color 120ms, border-color 120ms;
+}
+.btn-cancel-checkout:hover { color: var(--text-muted); border-color: var(--border-strong); }
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-strong);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 700ms linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error banner ────────────────────────────────────── */
+
+.error-banner {
+    position: absolute;
+    bottom: 48px;
+    left: 24px;
+    right: 24px;
+    background: rgba(224,82,82,0.12);
+    border: 1px solid rgba(224,82,82,0.3);
+    border-radius: var(--radius-sm);
+    color: #e05252;
+    font-size: 12px;
+    padding: 8px 12px;
+    text-align: center;
+}
+
+.error-banner.hidden { display: none; }

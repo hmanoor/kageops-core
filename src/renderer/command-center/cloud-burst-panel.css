@@ -1,0 +1,288 @@
+/* Pillar 2.4 / Cloud Burst panel styles
+ * --------------------------------------------------------------
+ * Mirrors the Command Center design tokens; values come from the
+ * existing variables defined in command-center.css.
+ */
+
+.cb-panel {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.cb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.cb-header__title h2 {
+    margin: 0;
+}
+
+.cb-header__sub {
+    margin: 4px 0 0;
+    color: var(--text-dim, #8a8d96);
+    font-size: 13px;
+}
+
+.cb-header__summary {
+    display: flex;
+    gap: 8px;
+}
+
+.cb-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: var(--surface-2, #1c1f24);
+    color: var(--text-dim, #8a8d96);
+    border: 1px solid var(--border, #2a2d33);
+}
+
+.cb-chip--live {
+    background: rgba(91, 179, 119, 0.15);
+    color: var(--accent, #5BB377);
+    border-color: rgba(91, 179, 119, 0.4);
+}
+
+.cb-chip--cost {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Section shell ───────────────────────────────── */
+
+.cb-section {
+    background: var(--surface-1, #14161a);
+    border: 1px solid var(--border, #2a2d33);
+    border-radius: 10px;
+    padding: 16px 20px;
+}
+
+.cb-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.cb-section-header h3 {
+    margin: 0;
+    font-size: 15px;
+}
+
+.cb-section-sub {
+    margin: 4px 0 0;
+    color: var(--text-dim, #8a8d96);
+    font-size: 12px;
+}
+
+.cb-section-body {
+    margin-top: 8px;
+}
+
+.cb-section-status,
+.cb-pool-status {
+    margin-top: 12px;
+    font-size: 12px;
+    min-height: 1.2em;
+    color: var(--text-dim, #8a8d96);
+}
+
+.cb-section-status[data-kind="error"],
+.cb-pool-status[data-kind="error"] {
+    color: var(--danger, #e57373);
+}
+
+.cb-section-status[data-kind="ok"],
+.cb-pool-status[data-kind="ok"] {
+    color: var(--accent, #5BB377);
+}
+
+/* ── Empty / loading states ─────────────────────── */
+
+.cb-empty {
+    color: var(--text-dim, #8a8d96);
+    font-size: 13px;
+    padding: 16px 0;
+}
+
+.cb-empty--error {
+    color: var(--danger, #e57373);
+}
+
+/* ── Pool form ───────────────────────────────────── */
+
+.cb-pool-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.cb-pool-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-dim, #8a8d96);
+}
+
+.cb-pool-form input {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border, #2a2d33);
+    background: var(--surface-2, #1c1f24);
+    color: var(--text, #e7e9ee);
+    font-family: var(--font-mono, monospace);
+    font-size: 13px;
+}
+
+.cb-pool-form input:focus {
+    outline: 1px solid var(--accent, #5BB377);
+    outline-offset: 1px;
+}
+
+.cb-pool-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+
+.cb-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border, #2a2d33);
+    background: var(--surface-2, #1c1f24);
+    color: var(--text, #e7e9ee);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 80ms ease, border-color 80ms ease;
+}
+
+.cb-btn:hover:not(:disabled) {
+    background: var(--surface-3, #232730);
+}
+
+.cb-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cb-btn--primary {
+    background: var(--accent, #5BB377);
+    color: #0f0f0f;
+    border-color: var(--accent, #5BB377);
+}
+
+.cb-btn--primary:hover:not(:disabled) {
+    background: var(--accent-hover, #4ca06a);
+}
+
+.cb-btn--danger {
+    border-color: var(--danger, #e57373);
+    color: var(--danger, #e57373);
+}
+
+.cb-btn--danger:hover:not(:disabled) {
+    background: rgba(229, 115, 115, 0.1);
+}
+
+.cb-btn--small {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+/* ── Pool card ───────────────────────────────────── */
+
+.cb-pool-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cb-pool-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.cb-pool-card__head h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.cb-pool-card__sub {
+    margin: 4px 0 0;
+    color: var(--text-dim, #8a8d96);
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+}
+
+.cb-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim, #8a8d96);
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ── Table ───────────────────────────────────────── */
+
+.cb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.cb-table th,
+.cb-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border, #2a2d33);
+}
+
+.cb-table th {
+    color: var(--text-dim, #8a8d96);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cb-table code {
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    color: var(--text, #e7e9ee);
+}
+
+/* ── Status pills ─────────────────────────────── */
+
+.cb-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.cb-status--queued        { background: rgba(255, 196, 0, 0.15); color: #ffc400; }
+.cb-status--provisioning  { background: rgba(120, 180, 255, 0.15); color: #78b4ff; }
+.cb-status--running       { background: rgba(91, 179, 119, 0.15); color: var(--accent, #5BB377); }
+.cb-status--completed     { background: rgba(180, 180, 180, 0.10); color: var(--text-dim, #8a8d96); }
+.cb-status--failed        { background: rgba(229, 115, 115, 0.15); color: var(--danger, #e57373); }
+.cb-status--timeout       { background: rgba(229, 178, 115, 0.15); color: #e5b273; }

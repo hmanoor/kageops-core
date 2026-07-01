@@ -1,0 +1,22 @@
+# Vercel build does NOT need .env files from the uploaded workspace —
+# runtime env comes from --env flags (vercel deploy) or the dashboard.
+# Aegis's deploy-production task writes a .env.production TEMPLATE
+# (with placeholder values like pk_live_); if uploaded, Vercel's build
+# loader picks it up and crashes Clerk/Stripe with invalid-key errors.
+# Excluding all .env* files removes the foot-gun.
+.env
+.env.local
+.env.production
+.env.production.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+
+# KageOps build artifacts Vercel does not need.
+build-report.html
+RUNBOOK.md
+PROD_DEPLOYMENT.md
+INFRASTRUCTURE.md
+.env.production.template
+.env.production.example

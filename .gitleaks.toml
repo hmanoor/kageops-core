@@ -1,0 +1,27 @@
+# gitleaks config for KageOps (security gate S1).
+# Extends the default ruleset; adds an allowlist for documented non-secrets so
+# CI doesn't red-fail on placeholders, docs examples, and local-dev defaults.
+title = "KageOps gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented non-secrets: placeholders, examples, local-dev defaults."
+regexes = [
+  '''placeholder''',
+  '''(?i)\bexample\b''',
+  '''AKIAIOSFODNN7EXAMPLE''',                 # AWS canonical doc key
+  '''(?i)change[_-]?me''',
+  '''your-[a-z0-9-]*(?:key|token|secret)''',  # your-anthropic-key-here etc.
+  '''Y2xlcmsuZXhhbXBsZS5jb20k''',             # Clerk public example key
+]
+paths = [
+  '''.*\.test\.ts$''',
+  '''.*\.spec\.ts$''',
+  '''.*\.snap$''',
+  '''package-lock\.json$''',
+]
+# NOTE: kageops-core is published as a single squashed initial commit (no
+# private history), so no historical-commit allowlist is needed — the entire
+# tree is scanned clean.

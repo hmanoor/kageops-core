@@ -1,0 +1,128 @@
+/* ═══════════════════════════════════════════════════════════════
+   Agent Logs Panel — all-project subprocess output stream.
+
+   Class prefixes: .agent-logs__*, .al-*
+   Token-driven; matches the agent-terminal aesthetic.
+   ═════════════════════════════════════════════════════════════ */
+
+#agent-logs-body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.al-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--surface-sunken);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+}
+
+/* ── Header row ─────────────────────────────────────── */
+
+.agent-logs__header,
+.al-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-5);
+    border-bottom: var(--border-width) solid var(--border-color);
+    background: var(--surface-raised);
+    flex-shrink: 0;
+}
+
+.agent-logs__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.agent-logs__live {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--accent);
+    font-family: var(--font-mono);
+}
+
+.agent-logs__live::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent-ring);
+    animation: al-pulse 2s ease-out infinite;
+}
+
+@keyframes al-pulse {
+    0%   { box-shadow: 0 0 0 0 var(--accent-ring); }
+    100% { box-shadow: 0 0 0 6px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .agent-logs__live::before { animation: none; }
+}
+
+/* ── Stream viewport ────────────────────────────────── */
+
+.al-stream,
+.agent-logs__viewport {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-5);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    background: var(--surface-sunken);
+    outline: none;
+}
+
+.al-stream:focus-visible,
+.agent-logs__viewport:focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: -2px;
+}
+
+.al-line {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.5;
+}
+
+.al-line__prefix {
+    color: var(--text-subtle);
+    margin-right: var(--space-3);
+    user-select: none;
+}
+
+.al-line--stderr {
+    color: oklch(0.78 0.16 25);
+}
+
+.al-line--system {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ── Empty state slot (idle-screen mounts here) ─────── */
+
+.al-empty-host {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

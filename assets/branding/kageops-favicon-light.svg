@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="64" height="64" fill="none" role="img" aria-label="KageOps">
+  <!--
+    KageOps · Favicon · Light variant
+    Same Mark C foot reduction, on a near-white tile for use in light-themed
+    chrome (browser tabs that ignore dark-mode favicons, paged previews, etc.)
+  -->
+  <rect width="16" height="16" rx="3" fill="#fafafa"/>
+  <path d="M4 5 L12 5 L8 12 Z" fill="#5BB377"/>
+</svg>

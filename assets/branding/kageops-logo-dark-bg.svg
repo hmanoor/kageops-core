@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" fill="none" role="img" aria-label="KageOps">
+  <!--
+    KageOps · Mark C · Kanji-fold (canonical) — for DARK backgrounds.
+    Strokes thickened to 2.8 vs. design-pack hairline 1.4 for legibility.
+  -->
+  <g stroke="#e8e8e8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M14 16 L34 16 L34 32 L18 32"/>
+    <path d="M22 22 L30 22"/>
+    <path d="M40 14 L40 44"/>
+    <path d="M44 18 L48 14"/>
+    <path d="M44 30 L48 26"/>
+    <path d="M44 42 L48 38"/>
+  </g>
+  <path d="M22 40 L34 40 L28 50 Z" fill="#5BB377"/>
+</svg>

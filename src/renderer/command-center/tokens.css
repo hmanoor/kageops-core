@@ -1,0 +1,428 @@
+/* ═══════════════════════════════════════════════════════════════
+   KageOps Command Center — Design Tokens (Track B)
+   ───────────────────────────────────────────────────────────────
+   Linear-meets-VS-Code token layer. Additive, loaded BEFORE
+   command-center.css so the existing sheet can still override
+   during the migration. Consumers opt into these via var(--*).
+
+   Scales:
+     - Spacing: 4px grid (Linear)
+     - Type: 11 → 26 (11,12,13,14,16,20,26)
+     - Radius: 3 / 6 / 8 / 12
+     - Motion: 100 / 160 / 240 ms on cubic-bezier(0.2, 0, 0, 1)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Wave 2: Instrument Serif @import dropped. The display family was
+   adding a quirky/editorial feel to dense surfaces and even when
+   redirected to Inter via shell-polish.css, the @import still
+   triggers a Google Fonts request. Inter handles every weight we
+   need, so display-tier text just inherits from --font-sans. */
+
+/* ── Local font faces (OFL-licensed, see fonts/OFL-*.txt) ─────── */
+@font-face {
+    font-family: 'Inter Variable';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('fonts/inter-variable.woff2') format('woff2-variations');
+}
+@font-face {
+    font-family: 'Inter Variable';
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('fonts/inter-variable-italic.woff2') format('woff2-variations');
+}
+@font-face {
+    font-family: 'JetBrains Mono Variable';
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url('fonts/jetbrains-mono-variable.woff2') format('woff2-variations');
+}
+@font-face {
+    font-family: 'JetBrains Mono Variable';
+    font-style: italic;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url('fonts/jetbrains-mono-variable-italic.woff2') format('woff2-variations');
+}
+
+:root {
+
+    /* ── Typography ────────────────────────────────────────── */
+    /* Variable faces first — these are shipped locally (see @font-face
+       above); static families and system fallbacks follow for safety. */
+    --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace,
+                 "SF Mono", "Berkeley Mono", Menlo, Consolas, monospace;
+    --font-display: var(--font-sans);  /* Wave 2: drop serif display, use Inter everywhere */
+
+    /* Type scale */
+    --text-xs:   11px;   /* micro labels, badges */
+    --text-sm:   12px;   /* captions, chips */
+    --text-base: 13px;   /* default body (Linear default) */
+    --text-md:   14px;   /* emphasised body */
+    --text-lg:   16px;   /* section titles */
+    --text-xl:   20px;   /* panel headings */
+    --text-2xl:  26px;   /* view-level headings */
+
+    /* Line heights */
+    --leading-tight:   1.2;
+    --leading-normal:  1.45;
+    --leading-relaxed: 1.6;
+
+    /* Letter spacing */
+    --tracking-tight:  -0.01em;
+    --tracking-normal: 0;
+    --tracking-wide:   0.08em;
+
+    /* Weights */
+    --font-regular:  400;
+    --font-medium:   500;
+    --font-semibold: 600;
+
+    /* ── Spacing (4px grid) ────────────────────────────────── */
+    --space-0: 0;
+    --space-1: 2px;
+    --space-2: 4px;
+    --space-3: 6px;
+    --space-4: 8px;
+    --space-5: 12px;
+    --space-6: 16px;
+    --space-7: 24px;
+    --space-8: 32px;
+    --space-9: 48px;
+
+    /* ── Radius ───────────────────────────────────────────── */
+    --radius-sm: 3px;
+    --radius:    6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    /* ── Borders (pure neutral — no hue cast) ─────────────── */
+    --border-width: 1px;
+    --border-color:         rgba(255, 255, 255, 0.10);
+    --border-color-strong:  rgba(255, 255, 255, 0.16);
+    --border-color-subtle:  rgba(255, 255, 255, 0.06);
+
+    /* ── Surface tints (additive overlays — dark-theme-tuned) ─── */
+    --surface-tint-faint:   oklch(1 0 0 / 0.03);  /* whisper */
+    --surface-tint-soft:    oklch(1 0 0 / 0.06);  /* hover */
+    --surface-tint:         oklch(1 0 0 / 0.10);  /* selected */
+
+    /* ── Motion ───────────────────────────────────────────── */
+    --ease:           cubic-bezier(0.2, 0, 0, 1);
+    --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-fast:    100ms;
+    --motion-base:    160ms;
+    --motion-slow:    240ms;
+
+    /* Prebuilt transition strings */
+    --transition-fast-ease: var(--motion-fast) var(--ease);
+    --transition-base-ease: var(--motion-base) var(--ease);
+    --transition-slow-ease: var(--motion-slow) var(--ease);
+
+    /* ── Z-index scale ────────────────────────────────────── */
+    --z-base:              1;
+    --z-panel:             10;
+    --z-sticky:            50;
+    --z-overlay:           100;
+    --z-modal:             200;
+    --z-command-palette:   300;
+    --z-toast:             400;
+    --z-tooltip:           500;
+
+    /* ── Surfaces (dark-first — macOS dark system palette)
+       Shifted to Apple's systemBackground family for macOS fidelity.
+       #1c1c1e = systemBackground, #2c2c2e = secondarySystemBackground,
+       #3a3a3c = tertiarySystemBackground (UIKit dark mode). */
+    --surface:         #1e1e1e;   /* canvas — VS Code editor background */
+    --surface-raised:  #252526;   /* panel — VS Code sidebar/panel */
+    --surface-sunken:  #141414;   /* terminal — deep but not OLED black */
+    --surface-elev-2:  #2d2d2d;   /* nested cards — VS Code panel header */
+    --surface-overlay: rgba(30, 30, 30, 0.88); /* modal scrim */
+
+    /* ── Text (VS Code Dark palette) ───────────────────────── */
+    --text:        #d4d4d4;   /* primary — VS Code default text */
+    --text-muted:  #9d9d9d;
+    --text-subtle: #6e6e6e;
+    /* Dark glyph on the moss-green saturated accent — green doesn't
+       have enough contrast against white at the current chroma. */
+    --text-on-accent: #0A0A0A;
+
+    /* ── Accent — KageOps moss green (B-499 Wave 1) ─────────
+       Replaces the legacy lantern orange (#F97316). The green reads
+       calm + technical against the slate-blue ink and matches the
+       sensei-eye accent on the kageops.ai landing page. */
+    --accent:        oklch(0.66 0.12 150);
+    --accent-hover:  oklch(0.72 0.13 150);
+    --accent-dim:    oklch(0.50 0.10 150);
+    --accent-muted:  oklch(0.66 0.12 150 / 0.14);
+    --accent-soft:   oklch(0.66 0.12 150 / 0.14);
+    --accent-ring:   oklch(0.66 0.12 150 / 0.32);
+
+    /* ── Status ───────────────────────────────────────────── */
+    --status-success: #10B981;
+    --status-success-bg: rgba(16, 185, 129, 0.12);
+    --status-warning: oklch(0.62 0.08 75);
+    --status-warning-bg: oklch(0.62 0.08 75 / 0.10);
+    --status-danger:  #DC2626;
+    --status-danger-bg:  rgba(220, 38, 38, 0.14);
+    --status-info:    #3B82F6;
+    --status-info-bg:    rgba(59, 130, 246, 0.12);
+
+    /* ── Agent accent tokens (from AGENT_PROFILES) ────────── */
+    --agent-sensei:    #D4AF37;
+    --agent-scout:     #6BCB77;
+    --agent-blueprint: #3B82F6;
+    --agent-pixel:     #D946EF;
+    --agent-forge:     oklch(0.66 0.12 150);
+    --agent-cipher:    #7C3AED;
+    --agent-aegis:     #94A3B8;
+    --agent-vigil:     #10B981;
+    --agent-herald:    #DC2626;
+
+    /* ── Domain palettes (B-495a) ──────────────────────────────
+       Panel-scoped palettes promoted out of command-center.css.
+       Grouped by domain so call sites read declaratively
+       (`var(--phase-design-bg)` rather than `rgba(191,90,242,0.12)`). */
+
+    /* Phase pills — 6-phase product lifecycle */
+    --phase-discovery-fg:     var(--accent);
+    --phase-discovery-bg:     rgba(0, 113, 227, 0.12);
+    --phase-discovery-border: rgba(0, 113, 227, 0.35);
+    --phase-poc-fg:           oklch(0.65 0.10 210);
+    --phase-poc-bg:           rgba(100, 210, 255, 0.12);
+    --phase-poc-border:       rgba(100, 210, 255, 0.35);
+    --phase-design-fg:        oklch(0.62 0.12 285);
+    --phase-design-bg:        rgba(191, 90, 242, 0.12);
+    --phase-design-border:    rgba(191, 90, 242, 0.35);
+    --phase-dev-fg:           var(--accent);
+    --phase-dev-bg:           rgba(255, 103, 35, 0.12);
+    --phase-dev-border:       rgba(255, 103, 35, 0.35);
+    --phase-launch-fg:        var(--status-success);
+    --phase-launch-bg:        rgba(48, 209, 88, 0.12);
+    --phase-launch-border:    rgba(48, 209, 88, 0.35);
+
+    /* Project status badges (Material palette) */
+    --badge-active-bg:    #2E7D32;
+    --badge-paused-bg:    oklch(0.38 0.06 75);
+    --badge-cancelled-bg: #616161;
+    --badge-completed-bg: #1565C0;
+    --badge-archived-bg:  #424242;
+    --badge-archived-fg:  #BDBDBD;
+    --badge-awaiting-bg:  #7B1FA2;
+
+    /* Purpose badges */
+    --purpose-platform-fg:     #C084FC;
+    --purpose-platform-bg:     rgba(192, 132, 252, 0.12);
+    --purpose-platform-border: rgba(192, 132, 252, 0.35);
+    --purpose-shared-fg:       var(--accent);
+    --purpose-shared-bg:       rgba(19, 187, 175, 0.12);
+    --purpose-shared-border:   rgba(19, 187, 175, 0.35);
+    --purpose-poc-fg:          var(--accent);
+    --purpose-poc-bg:          rgba(255, 79, 0, 0.12);
+    --purpose-poc-border:      rgba(255, 79, 0, 0.35);
+    --purpose-project-fg:      var(--status-success);
+    --purpose-project-bg:      rgba(163, 215, 149, 0.12);
+    --purpose-project-border:  rgba(163, 215, 149, 0.35);
+
+    /* Team-member role-lead pill */
+    --member-lead-fg:     #C084FC;
+    --member-lead-bg:     rgba(192, 132, 252, 0.15);
+    --member-lead-border: rgba(192, 132, 252, 0.4);
+
+    /* Agent provider tints (Config / Agent panels) */
+    --provider-ollama-bg:     rgba(163, 215, 149, 0.12);
+    --provider-ollama-border: rgba(163, 215, 149, 0.4);
+    --provider-openai-bg:     rgba(16, 185, 129, 0.12);
+    --provider-openai-border: rgba(16, 185, 129, 0.4);
+    --provider-claude-fg:     #C084FC;
+    --provider-claude-bg:     rgba(192, 132, 252, 0.12);
+    --provider-claude-border: rgba(192, 132, 252, 0.4);
+    --provider-openrouter-bg:     rgba(255, 79, 0, 0.12);
+    --provider-openrouter-border: rgba(255, 79, 0, 0.4);
+
+    /* APO status badges (Tailwind slate / emerald / red) */
+    --apo-status-proposed-bg:    #334155;
+    --apo-status-proposed-fg:    #CBD5E1;
+    --apo-status-accepted-bg:    #065F46;
+    --apo-status-accepted-fg:    #A7F3D0;
+    --apo-status-rolled-back-bg: #7F1D1D;
+    --apo-status-rolled-back-fg: #FECACA;
+
+    /* APO diff add/remove (Tailwind green-400 / red-400 tinted) */
+    --apo-diff-add-bg: rgba(74, 222, 128, 0.10);
+    --apo-diff-add-fg: #BBF7D0;
+    --apo-diff-del-bg: rgba(248, 113, 113, 0.10);
+    --apo-diff-del-fg: #FECACA;
+
+    /* ── Shadows (B-495b) ──────────────────────────────────────
+       Two parallel ramps:
+       - Elevation (sm/md/lg/xl) — generic surface lift
+       - Domain (panel/hover/modal) — component-semantic, preserved
+         from the design-pack
+       Plus drawer + divider + glow utilities. Light overrides live
+       under [data-theme="light"]. New code should prefer the
+       elevation ramp; the domain trio remains for back-compat. */
+    --shadow-sm:    0 1px 3px rgba(7, 7, 15, 0.30);
+    --shadow-md:    0 4px 16px rgba(7, 7, 15, 0.40);
+    --shadow-lg:    0 6px 24px rgba(7, 7, 15, 0.45);
+    --shadow-xl:    0 10px 32px rgba(7, 7, 15, 0.55);
+
+    --shadow-panel: 0 4px 8px rgba(7, 7, 15, 0.38), 0 1px 2px rgba(7, 7, 15, 0.5);
+    --shadow-hover: 0 12px 28px rgba(7, 7, 15, 0.45), 0 2px 4px rgba(7, 7, 15, 0.5);
+    --shadow-modal: 0 28px 60px rgba(7, 7, 15, 0.55), 0 4px 8px rgba(7, 7, 15, 0.5);
+
+    --shadow-drawer:         -4px 0 16px rgba(7, 7, 15, 0.45);
+    --shadow-divider-top:    0 1px 0 rgba(255, 255, 255, 0.02);
+
+    /* Component-shadow recipes (B-495b): repeated button/card patterns
+       extracted from inline `box-shadow:` declarations. */
+
+    /* Subtle button bevel — sits on raised surfaces. */
+    --shadow-button:       0 1px 2px rgba(7, 7, 15, 0.20),
+                           inset 0 1px 0 var(--surface-tint);
+    /* Accent button in hover/active state — adds the accent glow. */
+    --shadow-button-accent: 0 2px 8px var(--accent-glow),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    /* "Pop" elevation — between sm and md. Used by floating menus,
+       split-button popups, dropdown overlays. */
+    --shadow-pop:          0 2px 12px rgba(7, 7, 15, 0.40);
+    /* Status-tint focus ring (info-blue) used by git-diff hunk
+       focus + similar; avoids the heavier accent ring. */
+    --focus-ring-info:     0 0 0 2px rgba(110, 168, 254, 0.18);
+    --shadow-divider-bottom: 0 -1px 0 rgba(255, 255, 255, 0.02);
+    --shadow-inset-highlight: inset 0 1px 0 rgba(246, 241, 228, 0.06);
+
+    /* Glow utilities — used for status dots and emphasised hover
+       affordances. Each picks the matching status colour at low alpha
+       so the recipe reads "this thing is healthy / warning / failing". */
+    --shadow-glow-accent:  0 0 12px var(--accent-ring);
+    --shadow-glow-success: 0 0 6px rgba(16, 185, 129, 0.5);
+    --shadow-glow-warning: 0 0 6px rgba(245, 158, 11, 0.5);
+    --shadow-glow-danger:  0 0 6px rgba(220, 38, 38, 0.5);
+    --shadow-glow-info:    0 0 6px rgba(59, 130, 246, 0.5);
+    /* Renamed conceptually from "lantern" to "accent-pulse" with the
+       move from orange to green (B-499); name kept for back-compat. */
+    --shadow-glow-lantern: 0 0 0 1px oklch(0.66 0.12 150 / 0.4), 0 0 24px oklch(0.66 0.12 150 / 0.28);
+
+    /* ── Agent Terminal palette (B-495c) ─────────────────────
+       VSCode-ish dark defaults for the read-only Agent Terminal panel
+       (B-497). Splits into chrome (panel surface + header + status
+       text) and the 16-slot ANSI SGR palette (fg + bg) used by the
+       hand-rolled ANSI parser in agent-terminal-panel.ts. */
+    --terminal-bg:          #0D0F12;
+    --terminal-header-bg:   #1A1C1F;
+    --terminal-border:      rgba(255, 255, 255, 0.06);
+    --terminal-fg:          #D4D4D4;
+    --terminal-fg-strong:   #C8C8C8;
+    --terminal-fg-muted:    #A0A0A0;
+    --terminal-fg-dim:      #888888;
+    --terminal-stderr-fg:   #F5B7B1;
+
+    /* ANSI 16-colour foreground palette (slots 0-7 normal, 8-15 bright) */
+    --ansi-fg-0:  #5C5C5C;  /* black   */
+    --ansi-fg-1:  #F48771;  /* red     */
+    --ansi-fg-2:  #B5CEA8;  /* green   */
+    --ansi-fg-3:  #DCDCAA;  /* yellow  */
+    --ansi-fg-4:  #569CD6;  /* blue    */
+    --ansi-fg-5:  #C586C0;  /* magenta */
+    --ansi-fg-6:  #4EC9B0;  /* cyan    */
+    --ansi-fg-7:  #D4D4D4;  /* white   */
+    --ansi-fg-8:  #808080;  /* bright black   */
+    --ansi-fg-9:  #FF9B9B;  /* bright red     */
+    --ansi-fg-10: #D7FFAA;  /* bright green   */
+    --ansi-fg-11: #FFE4A1;  /* bright yellow  */
+    --ansi-fg-12: #9CDCFE;  /* bright blue    */
+    --ansi-fg-13: #D6ACD6;  /* bright magenta */
+    --ansi-fg-14: #9CDCDC;  /* bright cyan    */
+    --ansi-fg-15: #FFFFFF;  /* bright white   */
+
+    /* ANSI 16-colour background palette */
+    --ansi-bg-0:  #2D2D2D;
+    --ansi-bg-1:  #4D1F1F;
+    --ansi-bg-2:  #2C4023;
+    --ansi-bg-3:  #4A3C1D;
+    --ansi-bg-4:  #1F3A5D;
+    --ansi-bg-5:  #4A1F4A;
+    --ansi-bg-6:  #1F4A4A;
+    --ansi-bg-7:  #5A5A5A;
+    --ansi-bg-8:  #404040;
+    --ansi-bg-9:  #5A2929;
+    --ansi-bg-10: #3A5A2D;
+    --ansi-bg-11: #5A4D29;
+    --ansi-bg-12: #29467A;
+    --ansi-bg-13: #5A295A;
+    --ansi-bg-14: #295A5A;
+    --ansi-bg-15: #707070;
+
+    /* ── Focus ring (VS Code / Linear style) ──────────────── */
+    --focus-ring: 0 0 0 2px var(--accent-ring);
+
+    /* ── Icon sizing ──────────────────────────────────────── */
+    --icon-sm: 14px;
+    --icon:    16px;
+    --icon-md: 20px;
+    --icon-lg: 24px;
+}
+
+/* ── Light theme — VS Code Light Modern ────────────────── */
+[data-theme="light"] {
+    --surface:         #ffffff;   /* VS Code editor background */
+    --surface-raised:  #f3f3f3;   /* VS Code sidebar */
+    --surface-sunken:  #ebebeb;   /* terminal / input background */
+    --surface-elev-2:  #e8e8e8;   /* nested panels */
+    --surface-overlay: rgba(255, 255, 255, 0.88);
+
+    --text:        #000000;   /* VS Code Light primary text */
+    --text-muted:  #3b3b3b;
+    --text-subtle: #5a5a5a;
+
+    --border-color:         rgba(0, 0, 0, 0.14);
+    --border-color-strong:  rgba(0, 0, 0, 0.22);
+    --border-color-subtle:  rgba(0, 0, 0, 0.07);
+
+    --accent-hover:  oklch(0.58 0.13 150);
+    --accent-muted:  oklch(0.66 0.12 150 / 0.10);
+    --accent-ring:   oklch(0.66 0.12 150 / 0.24);
+
+    --status-success-bg: rgba(16, 185, 129, 0.08);
+    --status-warning-bg: rgba(245, 158, 11, 0.08);
+    --status-danger-bg:  rgba(220, 38, 38, 0.08);
+    --status-info-bg:    rgba(59, 130, 246, 0.08);
+
+    /* Shadows — paper scale for light theme */
+    --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-md:    0 4px 16px rgba(0, 0, 0, 0.10);
+    --shadow-lg:    0 12px 28px rgba(0, 0, 0, 0.14);
+    --shadow-xl:    0 24px 48px rgba(0, 0, 0, 0.18);
+
+    --shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px oklch(0.66 0.12 150 / 0.16);
+    --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+
+    --shadow-drawer:         -4px 0 16px rgba(0, 0, 0, 0.08);
+    --shadow-divider-top:    0 1px 0 rgba(0, 0, 0, 0.04);
+    --shadow-divider-bottom: 0 -1px 0 rgba(0, 0, 0, 0.04);
+    --shadow-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+    /* Component-shadow recipes — light overrides (paper scale). */
+    --shadow-button:       0 1px 2px rgba(0, 0, 0, 0.06),
+                           inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    --shadow-button-accent: 0 2px 8px var(--accent-glow),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    --shadow-pop:          0 2px 12px rgba(0, 0, 0, 0.10);
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-fast: 0ms;
+        --motion-base: 0ms;
+        --motion-slow: 0ms;
+    }
+}

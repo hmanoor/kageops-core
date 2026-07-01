@@ -1,0 +1,18 @@
+{
+  "defaults": {
+    "model": "claude/claude-sonnet-4-20250514",
+    "temperature": 0.7,
+    "maxTokens": 4096
+  },
+  "agents": {
+    "sensei": { "model": "claude/claude-sonnet-4-20250514", "maxTokens": 8192 },
+    "scout": {},
+    "blueprint": { "maxTokens": 8192 },
+    "pixel": {},
+    "forge": { "maxTokens": 8192 },
+    "cipher": { "maxTokens": 8192 },
+    "aegis": {},
+    "vigil": { "maxTokens": 8192 },
+    "herald": {}
+  }
+}

@@ -1,0 +1,277 @@
+/* ============================================================
+   New-Project Quickflow — Phase 3
+   Drawer attached to the existing New Project modal +
+   tooltips on each form field.
+============================================================ */
+
+/* The drawer sits to the right of the modal body. We expand the modal
+   so the drawer doesn't push the form out. */
+
+.modal--onboarding {
+    position: relative;
+    /* Make room for the 280px drawer plus a 1px hairline */
+    max-width: min(960px, calc(100vw - 64px));
+}
+
+.qf-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100%;
+    background: var(--surface, #141414);
+    border-left: 1px solid var(--border-color-subtle, rgba(255, 255, 255, 0.06));
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4, 16px);
+    gap: var(--space-3, 12px);
+    overflow-y: auto;
+    transition: transform 200ms ease, opacity 200ms ease;
+    transform: translateX(0);
+    opacity: 1;
+    z-index: 1;
+}
+
+.qf-drawer.hidden {
+    transform: translateX(8px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (max-width: 980px) {
+    .qf-drawer { display: none; }
+    .modal--onboarding { max-width: 720px; }
+}
+
+/* Push the modal body content left so the drawer doesn't overlap it.
+   When the drawer is hidden, reclaim the space smoothly. */
+.modal--onboarding .modal-body--onboarding,
+.modal--onboarding .modal-header,
+.modal--onboarding .modal-footer {
+    margin-right: 280px;
+    transition: margin-right 200ms ease;
+}
+.modal--onboarding:has(.qf-drawer.hidden) .modal-body--onboarding,
+.modal--onboarding:has(.qf-drawer.hidden) .modal-header,
+.modal--onboarding:has(.qf-drawer.hidden) .modal-footer {
+    margin-right: 0;
+}
+@media (max-width: 980px) {
+    .modal--onboarding .modal-body--onboarding,
+    .modal--onboarding .modal-header,
+    .modal--onboarding .modal-footer {
+        margin-right: 0;
+    }
+}
+
+.qf-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--space-3, 12px);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+}
+
+.qf-drawer-title {
+    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    font-size: 11px;
+    color: var(--accent, oklch(0.66 0.12 150));
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.qf-drawer-close {
+    background: transparent;
+    border: 0;
+    color: var(--text-muted, #6B6B6B);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+.qf-drawer-close:hover {
+    color: var(--text-primary, #F5F5F5);
+    background: var(--surface, #141414);
+}
+
+.qf-drawer-intro {
+    font-size: 12px;
+    color: var(--text-secondary, #A3A3A3);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ── Checklist ──────────────────────────────────── */
+
+.qf-checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 8px);
+}
+
+.qf-check-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2, 8px);
+    padding: 8px 10px;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+    border-radius: var(--radius, 6px);
+    background: transparent;
+    transition: border-color 120ms ease;
+}
+
+.qf-check-item.done {
+    border-color: oklch(0.66 0.12 150 / 0.30);
+}
+
+.qf-check-mark {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-muted, #6B6B6B);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.10));
+    flex-shrink: 0;
+}
+
+.qf-check-item.done .qf-check-mark {
+    color: var(--accent, oklch(0.66 0.12 150));
+    border-color: var(--accent, oklch(0.66 0.12 150));
+}
+
+.qf-check-label {
+    font-size: 13px;
+    color: var(--text-secondary, #A3A3A3);
+}
+
+.qf-check-item.done .qf-check-label {
+    color: var(--text-primary, #F5F5F5);
+}
+
+.qf-drawer.all-done .qf-drawer-title {
+    color: var(--accent-strong, oklch(0.72 0.16 150));
+}
+.qf-drawer.all-done .qf-drawer-title::after {
+    content: ' · ready';
+}
+
+/* ── Don't show again ──────────────────────────── */
+
+.qf-dismiss {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted, #6B6B6B);
+    cursor: pointer;
+    padding-top: var(--space-3, 12px);
+    border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+}
+
+.qf-dismiss input {
+    margin: 0;
+}
+
+/* ── "?" help button (when drawer is dismissed) ── */
+
+.qf-help-btn {
+    background: transparent;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.10));
+    color: var(--text-muted, #6B6B6B);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    font-size: 13px;
+    line-height: 1;
+    margin-right: 8px;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+.qf-help-btn.hidden { display: none; }
+.qf-help-btn:hover {
+    color: var(--accent, oklch(0.66 0.12 150));
+    border-color: var(--accent, oklch(0.66 0.12 150));
+}
+
+/* ── Tooltip badges on form fields ─────────────── */
+
+.qf-tip-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+    color: var(--text-muted, #6B6B6B);
+    font-family: var(--font-mono, "JetBrains Mono", monospace);
+    font-size: 9px;
+    margin-left: 6px;
+    cursor: help;
+    position: relative;
+    vertical-align: middle;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+
+.qf-tip-badge:hover,
+.qf-tip-badge:focus-visible {
+    color: var(--accent, oklch(0.66 0.12 150));
+    border-color: var(--accent, oklch(0.66 0.12 150));
+    outline: none;
+}
+
+.qf-tip-popover {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 8px);
+    transform: translateX(-50%);
+    background: var(--surface-elevated, #1A1A1A);
+    border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+    border-radius: var(--radius, 6px);
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-secondary, #A3A3A3);
+    line-height: 1.5;
+    width: 240px;
+    z-index: 10;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: normal;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms ease;
+}
+.qf-tip-popover::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    background: var(--surface-elevated, #1A1A1A);
+    border-left: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+    border-top: 1px solid var(--border-strong, rgba(255, 255, 255, 0.16));
+}
+
+.qf-tip-badge:hover .qf-tip-popover,
+.qf-tip-badge:focus-visible .qf-tip-popover {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ── Reduced motion ───────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .qf-drawer, .qf-check-item, .qf-tip-badge, .qf-tip-popover { transition: none; }
+}

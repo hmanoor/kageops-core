@@ -8,7 +8,7 @@
   <img alt="KageOps" src="assets/branding/png/kageops-logo-light-bg-512.png" width="440">
 </picture>
 
-https://github.com/user-attachments/assets/774267e3-e871-438b-88bd-003820a6d214
+https://github.com/user-attachments/assets/e8144e9c-8208-4213-8da4-bbae47edff99
 ### An open-source, autonomous AI dev team — from one-line brief to shipped product.
 
 **Sensei** orchestrates eight specialist agents (the *Autonauts*) through a full

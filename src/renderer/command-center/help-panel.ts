@@ -11,6 +11,7 @@
  */
 
 import { marked } from 'marked';
+import { sanitizeHtml } from '../shared/sanitize-html';
 import quickstartMd from '../../../docs/help/01-quickstart.md';
 import presetsMd from '../../../docs/help/02-presets.md';
 import designProvidersMd from '../../../docs/help/03-design-providers.md';
@@ -102,7 +103,7 @@ export function initHelpPanel(): void {
     function renderDoc(slug: string): void {
         const doc = HELP_DOCS.find((d) => d.slug === slug);
         if (doc === undefined || content === null) return;
-        const html = marked.parse(doc.body, { async: false, gfm: true, breaks: false }) as string;
+        const html = sanitizeHtml(marked.parse(doc.body, { async: false, gfm: true, breaks: false }) as string);
         content.innerHTML = html;
         content.scrollTop = 0;
     }

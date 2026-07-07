@@ -9,6 +9,7 @@
 
 import { marked } from 'marked';
 import { AGENT_PROFILES } from './agent-profiles';
+import { sanitizeHtml } from '../shared/sanitize-html';
 
 // ── SVG icons ────────────────────────────────────────
 const SVG_SEARCH = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11L13.5 13.5"/></svg>`;
@@ -439,8 +440,9 @@ export function initKnowledgeBaseView(container: HTMLElement, api: KnowledgeBase
         const rawEl = viewer.querySelector('#kb-raw') as HTMLElement;
         const toggleEl = viewer.querySelector('#kb-viewer-toggle') as HTMLElement;
 
-        // Render markdown
-        const rendered = marked.parse(content, { async: false, gfm: true, breaks: true }) as string;
+        // Render markdown. KO-SEC-005/030: document content can be
+        // AI-generated agent output — sanitize before innerHTML.
+        const rendered = sanitizeHtml(marked.parse(content, { async: false, gfm: true, breaks: true }) as string);
         previewEl.innerHTML = rendered;
         rawEl.textContent = content;
 

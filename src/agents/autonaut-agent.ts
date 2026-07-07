@@ -2594,7 +2594,11 @@ export abstract class AutonautAgent {
     private validatePath(repoPath: string, fullPath: string): void {
         const resolvedRepo = path.resolve(repoPath);
         const resolvedFull = path.resolve(fullPath);
-        if (!resolvedFull.startsWith(resolvedRepo)) {
+        // KO-SEC-007/008/016: a bare startsWith() has no path-separator
+        // boundary, so a sibling directory like `<repo>-evil` (which shares
+        // `<repo>` as a string prefix but is NOT inside it) would wrongly
+        // pass. Require an exact match or a match followed by path.sep.
+        if (resolvedFull !== resolvedRepo && !resolvedFull.startsWith(resolvedRepo + path.sep)) {
             throw new Error(`Path traversal detected: ${fullPath} is outside repo ${repoPath}`);
         }
     }

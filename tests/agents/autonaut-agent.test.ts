@@ -536,6 +536,26 @@ describe('AutonautAgent — path traversal prevention', () => {
         expect(result).toBe(safeContent);
     });
 
+    it('readFile throws for a sibling directory that merely shares the repo dir as a string prefix (KO-SEC-007/008/016)', () => {
+        // Regression guard: validatePath used to check
+        // `resolvedFull.startsWith(resolvedRepo)` with no path-separator
+        // boundary, so a sibling dir like `<repo>-evil` (which shares
+        // `<repo>` as a string prefix but is NOT inside it) passed the
+        // check. Confirm it's rejected.
+        const siblingDir = `${tempDir}-evil`;
+        fs.mkdirSync(siblingDir, { recursive: true });
+        fs.writeFileSync(path.join(siblingDir, 'secret.txt'), 'top secret', 'utf-8');
+
+        const agent = new TestAgent();
+        try {
+            expect(() => {
+                agent.testReadFile(tempDir, `../${path.basename(siblingDir)}/secret.txt`);
+            }).toThrow(/[Pp]ath traversal/);
+        } finally {
+            fs.rmSync(siblingDir, { recursive: true, force: true });
+        }
+    });
+
     it('writeFile throws when the path resolves outside the repo directory', async () => {
         const agent = new TestAgent();
 

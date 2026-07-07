@@ -760,10 +760,10 @@ contextBridge.exposeInMainWorld('kageOps', {
         getDefaults: () => ipcRenderer.invoke('quickflow:get-defaults'),
     },
 
-    // Generic DB query passthrough (used by wizard for first-launch detection
-    // — checks if `projects` table is empty; main validates SQL safety).
-    dbQuery: (sql: string, params: ReadonlyArray<unknown>) =>
-        ipcRenderer.invoke('db:query', { sql, params }),
+    // Fixed, parameterless projects-empty check (used by wizard for
+    // first-launch detection). KO-SEC-002: no SQL string ever crosses IPC.
+    projectsIsEmpty: (): Promise<{ empty: boolean }> =>
+        ipcRenderer.invoke('projects:is-empty'),
 
     // ── Shell utilities ─────────────────────────────
     openPath: (args: { projectId: string | null; filePath: string }): Promise<string> =>

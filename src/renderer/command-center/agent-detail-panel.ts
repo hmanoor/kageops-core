@@ -8,6 +8,7 @@
 import { marked } from 'marked';
 import { AGENT_PROFILES } from './agent-profiles';
 import { getSigilHtml } from './sigils';
+import { sanitizeHtml } from '../shared/sanitize-html';
 
 // ── Known Models & Providers ─────────────────────────
 
@@ -404,7 +405,8 @@ export function renderAgentDetailPanel(
         }
 
         taskBodyEl.textContent = outputContent;
-        const renderedOutput = marked.parse(outputContent, { async: false, gfm: true, breaks: true }) as string;
+        // KO-SEC-005/030: task output is AI-generated — sanitize before innerHTML.
+        const renderedOutput = sanitizeHtml(marked.parse(outputContent, { async: false, gfm: true, breaks: true }) as string);
         taskPreviewEl.innerHTML = timelineHtml + renderedOutput;
     }
 }

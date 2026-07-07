@@ -5,6 +5,7 @@
  */
 
 import { marked } from 'marked';
+import { sanitizeHtml } from '../shared/sanitize-html';
 import { initViewSwitcher, registerViewInit, switchToView, type ViewId } from './view-switcher';
 import { initActivityBar, type ActivityBarHandle, type ActivityBarView } from './activity-bar';
 import { initPanelResize } from './panel-resize';
@@ -3111,7 +3112,9 @@ function renderToggleBlock(
         : '';
     let preview = '';
     try {
-        preview = marked.parse(text, { async: false, gfm: true, breaks: true }) as string;
+        // KO-SEC-005/030: source text can be AI-generated task/activity
+        // output — sanitize before it reaches innerHTML.
+        preview = sanitizeHtml(marked.parse(text, { async: false, gfm: true, breaks: true }) as string);
     } catch {
         preview = `<p>${escapeHtml(text)}</p>`;
     }
@@ -3617,9 +3620,12 @@ function initSenseiChat(): void {
 /**
  * Render Sensei text using full GFM markdown (bold, lists, headings,
  * code fences). User messages stay plain-text + escaped.
+ *
+ * KO-SEC-005/030: Sensei's reply text is AI-generated, so the markdown
+ * output is sanitized before it reaches innerHTML.
  */
 function renderSenseiText(text: string): string {
-    return marked.parse(text ?? '', { async: false, gfm: true, breaks: true }) as string;
+    return sanitizeHtml(marked.parse(text ?? '', { async: false, gfm: true, breaks: true }) as string);
 }
 
 function appendSenseiMessage(text: string, from: 'user' | 'sensei'): void {

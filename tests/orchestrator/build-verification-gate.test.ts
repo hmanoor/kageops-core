@@ -323,7 +323,10 @@ describe('BuildVerificationGate', () => {
         const isWindows = process.platform === 'win32';
         expect(spawnMock).toHaveBeenCalledWith(
             isWindows ? 'npm.cmd' : 'npm',
-            ['install'],
+            // KO-SEC-004/019: --ignore-scripts stops an AI-generated
+            // package.json from running arbitrary lifecycle scripts
+            // (postinstall etc.) unsandboxed on the host during install.
+            ['install', '--ignore-scripts'],
             expect.objectContaining({ cwd: '/my/repo', shell: isWindows })
         );
     });
@@ -455,6 +458,15 @@ describe('resolveBuildPlan', () => {
         const plan = resolveBuildPlan('/full');
         expect(plan.skip).toBe(false);
         expect(plan.steps.map((s) => s.name)).toEqual(['install', 'build', 'test']);
+    });
+
+    it('runs install with --ignore-scripts to contain generated-project lifecycle scripts (KO-SEC-004/019)', () => {
+        vi.mocked(fs.existsSync).mockReturnValueOnce(true);
+        vi.mocked(fs.readFileSync).mockReturnValueOnce(
+            JSON.stringify({ scripts: { build: 'tsc', test: 'vitest run' } })
+        );
+        const plan = resolveBuildPlan('/full');
+        expect(plan.steps.find((s) => s.name === 'install')?.args).toEqual(['install', '--ignore-scripts']);
     });
 
     it('skips tsc build step when src/ has no .ts files (static-site scaffold)', () => {

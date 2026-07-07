@@ -240,4 +240,22 @@ describe('app-config-store', () => {
             expect(DEPRECATED_PRESET_REPLACEMENTS['codex-cli']).toBe('claude-cli');
         });
     });
+
+    describe('isValidPresetName (KO-SEC-007/008/016)', () => {
+        // This is the guard createPreset()/deletePreset() already rely on
+        // before touching `agent-config.<name>.json` on disk — the
+        // command-center:get-preset IPC handler in main.ts must call it too
+        // before constructing that same path from renderer-supplied input.
+        it('rejects names containing a path separator or traversal segment', async () => {
+            const { isValidPresetName } = await import('../../src/main/app-config-store');
+            expect(isValidPresetName('../../../etc/passwd')).toBe(false);
+            expect(isValidPresetName('foo/../bar')).toBe(false);
+            expect(isValidPresetName('a/b')).toBe(false);
+        });
+
+        it('accepts a normal lowercase preset name', async () => {
+            const { isValidPresetName } = await import('../../src/main/app-config-store');
+            expect(isValidPresetName('my-custom-preset')).toBe(true);
+        });
+    });
 });

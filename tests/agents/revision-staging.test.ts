@@ -101,6 +101,17 @@ describe('stageFile()', () => {
         ).toThrow(/[Pp]ath traversal/);
     });
 
+    it('rejects a sibling task-dir that merely shares the task dir as a string prefix (KO-SEC-007/008/016)', () => {
+        // Regression guard: the staging-dir guard used to check
+        // `absStaged.startsWith(path.resolve(dir))` with no path-separator
+        // boundary, so a sibling dir like `<TASK_ID>-evil` (which shares
+        // `<TASK_ID>` as a string prefix but is NOT nested inside it)
+        // passed the check.
+        expect(() =>
+            stageFile(PROJECT_ID, TASK_ID, repoDir, `../${TASK_ID}-evil/secret.txt`, 'malicious', { stagingRoot }),
+        ).toThrow(/[Pp]ath traversal/);
+    });
+
     it('overwrites a re-staged file with new content (sha changes)', () => {
         const first = stageFile(PROJECT_ID, TASK_ID, repoDir, 'a.txt', 'version 1', { stagingRoot });
         const second = stageFile(PROJECT_ID, TASK_ID, repoDir, 'a.txt', 'version 2', { stagingRoot });

@@ -149,7 +149,14 @@ describe('sendClaudeCliPrompt — spawn argv shape', () => {
         const [cmd, args] = mockSpawn.mock.calls[0] as unknown as [string, string[]];
         expect(cmd).toBe(FAKE_CLI_PATH);
         expect(args).toContain('--print');
-        expect(args).toContain('--dangerously-skip-permissions');
+        // KO-SEC-003: scope the CLI to no tools instead of bypassing all
+        // permission checks — with no tools available there is nothing for
+        // the CLI to prompt permission for, so headless `--print` runs
+        // clean without `--dangerously-skip-permissions`.
+        expect(args).not.toContain('--dangerously-skip-permissions');
+        const toolsIdx = args.indexOf('--tools');
+        expect(toolsIdx).toBeGreaterThanOrEqual(0);
+        expect(args[toolsIdx + 1]).toBe('');
         expect(args).toContain('--model');
         expect(args).toContain('sonnet');
         expect(result.model).toBe('claude-cli/sonnet');

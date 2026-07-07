@@ -51,7 +51,6 @@ import {
     TestAgentModelArgsSchema,
     SaveDeploymentArgsSchema,
     DeleteDeploymentArgsSchema,
-    DbQueryArgsSchema,
     LogErrorArgsSchema,
 } from '../shared/ipc-schemas';
 import {
@@ -62,6 +61,7 @@ import {
     setActivePreset,
     createPreset,
     deletePreset,
+    isValidPresetName,
     ensurePresetFiles,
     PresetName,
     PRESET_NAMES,
@@ -476,30 +476,20 @@ function isOptimizationStatus(v: unknown): v is PromptOptimizationStatus {
 // ── IPC Setup ────────────────────────────────────────
 
 function setupIPC(): void {
-  // Database Queries (GreenThumb v0.11 Phase 3)
-  ipcMain.handle(IPC.DB_QUERY, async (_event, args: unknown): Promise<unknown> => {
-    const parsed = DbQueryArgsSchema.safeParse(args);
-    if (!parsed.success) {
-      log.error({ errors: parsed.error.flatten() }, '[DB] Invalid query args');
-      throw new Error('Invalid database query arguments');
-    }
-
-    const { sql, params } = parsed.data;
-
-    // Reject queries with dangerous patterns (comment injection, wildcard SQL, etc.)
-    if (sql.includes('--') || sql.includes('/*') || sql.includes('*/')) {
-      log.error({ sql: sql.substring(0, 100) }, '[DB] Suspicious SQL pattern detected');
-      throw new Error('Suspicious SQL pattern detected');
-    }
-
+  // Projects — narrow, fixed-query check (KO-SEC-002 fix). Replaces the
+  // removed `db:query` raw-SQL passthrough: the renderer can no longer send
+  // an arbitrary SQL string across the IPC boundary — this handler runs one
+  // fixed, parameterless query and returns only a boolean.
+  ipcMain.handle(IPC.PROJECTS_IS_EMPTY, async (): Promise<{ readonly empty: boolean }> => {
     try {
       const pool = getPool();
-      const result = await pool.query(sql, params);
-      return { rows: result.rows };
+      const result = await pool.query('SELECT COUNT(*)::text AS n FROM projects');
+      const n = Number(result.rows[0]?.n ?? 0);
+      return { empty: n === 0 };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      log.error({ sql: sql.substring(0, 100), error: msg }, '[DB] Query failed');
-      throw new Error(`Database query failed: ${msg}`);
+      log.error({ error: msg }, '[Projects] is-empty query failed');
+      throw new Error(`Projects query failed: ${msg}`);
     }
   });
 
@@ -642,8 +632,8 @@ function setupCommandCenterIPC(): void {
     try {
       const { listProposed, stagingDirFor } = await import('../agents/revision-staging');
       const { getOne } = await import('../db/client');
+      const { resolveSafeWorkspacePath } = await import('../workspace/artifact-service');
       const fs = await import('fs');
-      const path = await import('path');
 
       const project = await getOne<{ repo_path: string }>(
         'SELECT repo_path FROM projects WHERE id = $1',
@@ -660,10 +650,12 @@ function setupCommandCenterIPC(): void {
       const PREVIEW_CAP = 64 * 1024;
       const stagingRoot = stagingDirFor(projectId, taskId);
       const files = proposal.files.map((f) => {
-        const stagedAbs = path.join(stagingRoot, f.path);
-        const liveAbs = path.resolve(project.repo_path, f.path);
-        const readSafe = (abs: string): string | null => {
+        // KO-SEC-007/008/016: f.path is derived from a staging-dir walk
+        // and is expected to already be safe, but resolve both reads
+        // through the shared containment guard as defense in depth.
+        const readSafe = (root: string, rel: string): string | null => {
           try {
+            const abs = resolveSafeWorkspacePath(root, rel);
             const buf = fs.readFileSync(abs, 'utf-8');
             return buf.length > PREVIEW_CAP ? null : buf;
           } catch { return null; }
@@ -674,8 +666,8 @@ function setupCommandCenterIPC(): void {
           proposedSha256: f.proposedSha256,
           currentSha256: f.currentSha256,
           unchanged: f.unchanged,
-          proposedContent: readSafe(stagedAbs),
-          currentContent: readSafe(liveAbs),
+          proposedContent: readSafe(stagingRoot, f.path),
+          currentContent: readSafe(project.repo_path, f.path),
         };
       });
 
@@ -706,6 +698,7 @@ function setupCommandCenterIPC(): void {
     try {
       const { acceptProposal } = await import('../agents/revision-staging');
       const { getOne } = await import('../db/client');
+      const { resolveSafeWorkspacePath } = await import('../workspace/artifact-service');
       const project = await getOne<{ repo_path: string }>(
         'SELECT repo_path FROM projects WHERE id = $1',
         [projectId]
@@ -719,10 +712,10 @@ function setupCommandCenterIPC(): void {
       const fs = await import('fs');
       const path = await import('path');
       const writer = async (rel: string, content: string): Promise<void> => {
-        const abs = path.resolve(project.repo_path, rel);
-        if (!abs.startsWith(path.resolve(project.repo_path))) {
-          throw new Error(`Path traversal detected: ${rel}`);
-        }
+        // KO-SEC-007/008/016: was a bare startsWith() with no
+        // path-separator boundary — a sibling dir sharing repo_path as a
+        // string prefix would wrongly pass.
+        const abs = resolveSafeWorkspacePath(project.repo_path, rel);
         fs.mkdirSync(path.dirname(abs), { recursive: true });
         fs.writeFileSync(abs, content, 'utf-8');
       };
@@ -1794,14 +1787,21 @@ except Exception as ex:
 
   ipcMain.handle('command-center:read-graph-html', async (_event, filePath: unknown) => {
     if (typeof filePath !== 'string') return { ok: false, error: 'invalid path' };
-    const normalized = filePath.replace(/\\/g, '/');
-    if (!normalized.endsWith('graphify-out/graph.html')) {
-      return { ok: false, error: 'invalid file' };
-    }
     try {
       const fs = await import('node:fs');
-      if (!fs.existsSync(filePath)) return { ok: false, error: 'not found' };
-      const content = fs.readFileSync(filePath, 'utf-8');
+      const { getMany } = await import('../db/client');
+      // KO-SEC-007/008/016: a suffix check alone (`.endsWith(...)`) does not
+      // confine `filePath` to a real project's workspace — any absolute path
+      // ending in that literal suffix would be read. Require the resolved
+      // path to be exactly `<some project's repo_path>/graphify-out/graph.html`.
+      const resolved = path.resolve(filePath);
+      const projects = await getMany<{ repo_path: string }>('SELECT repo_path FROM projects');
+      const isKnownGraphHtml = projects.some(
+        (p) => resolved === path.resolve(p.repo_path, 'graphify-out', 'graph.html')
+      );
+      if (!isKnownGraphHtml) return { ok: false, error: 'invalid file' };
+      if (!fs.existsSync(resolved)) return { ok: false, error: 'not found' };
+      const content = fs.readFileSync(resolved, 'utf-8');
       return { ok: true, content };
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
@@ -2353,6 +2353,14 @@ except Exception as ex:
     if (typeof name !== 'string' || name === '') {
       return { success: false, error: 'Missing preset name' };
     }
+    // KO-SEC-007/008/016: name used to be interpolated straight into the
+    // filename with no validation — a name containing `/` or `..` could
+    // escape KAGEOPS_DATA_DIR and read an arbitrary *.json file on the
+    // host. Reuse the same guard createPreset()/deletePreset() already
+    // enforce before touching this same file-naming scheme.
+    if (!isValidPresetName(name)) {
+      return { success: false, error: 'Invalid preset name.' };
+    }
     try {
       const filePath = path.join(
         process.env['KAGEOPS_DATA_DIR'] ?? path.join(os.homedir(), '.kageops'),
@@ -2570,8 +2578,11 @@ except Exception as ex:
         if (taskWithProject !== null) {
           try {
             const fs = await import('fs/promises');
-            const path = await import('path');
-            const absPath = path.join(taskWithProject.repo_path, task.output_path);
+            // KO-SEC-007/008/016: confine the read to the project's own
+            // workspace — resolveSafeWorkspacePath throws on escape, which
+            // this catch already treats the same as "file not readable".
+            const { resolveSafeWorkspacePath } = await import('../workspace/artifact-service');
+            const absPath = resolveSafeWorkspacePath(taskWithProject.repo_path, task.output_path);
             const content = await fs.readFile(absPath, 'utf-8');
             return { title: task.title, agent: task.assigned_agent, path: task.output_path, content };
           } catch {

@@ -165,17 +165,6 @@ export const DeleteDeploymentArgsSchema = z.object({
 
 export type DeleteDeploymentArgs = z.infer<typeof DeleteDeploymentArgsSchema>;
 
-// ── db:query (GreenThumb v0.11 Phase 3) ──────────────
-// ipcMain.handle('db:query', async (_event, args: unknown) => ...)
-// Parameterized database query from renderer → main process
-
-export const DbQueryArgsSchema = z.object({
-    sql: z.string().min(1, 'SQL query must not be empty'),
-    params: z.array(z.unknown()).default([]),
-});
-
-export type DbQueryArgs = z.infer<typeof DbQueryArgsSchema>;
-
 // ── log:error (GreenThumb v0.11 Phase 3) ─────────────
 // ipcRenderer.send('log:error', args)
 // Error logging from renderer to main

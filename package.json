@@ -44,6 +44,7 @@
     "@types/semver": "^7.7.1",
     "archiver": "^7.0.1",
     "archiver-utils": "^5.0.2",
+    "dompurify": "^3.4.11",
     "electron-updater": "^6.8.3",
     "keytar": "^7.9.0",
     "marked": "^15.0.0",

@@ -17,6 +17,7 @@
 
 import { marked } from 'marked';
 import { escapeHtml, highlight, languageForExtension } from './artifact-browser-highlight';
+import { sanitizeHtml } from '../shared/sanitize-html';
 
 export interface FileReadResult {
     readonly content: string | null;
@@ -166,7 +167,9 @@ function renderMarkdown(content: string): string {
             return `<pre class="ab-preview-code language-${lang}"><code>${highlighted}</code></pre>`;
         },
     );
-    return `<div class="ab-preview-markdown">${enhanced}</div>`;
+    // KO-SEC-005/030: file content can be AI-generated — sanitize the final
+    // markup (after code-block highlighting) before it reaches innerHTML.
+    return sanitizeHtml(`<div class="ab-preview-markdown">${enhanced}</div>`);
 }
 
 function decodeHtml(s: string): string {

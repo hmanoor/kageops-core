@@ -168,8 +168,9 @@ export const IPC = {
   SHELL_OUTPUT: 'command-center:shell-output',
   SHELL_EXIT:   'command-center:shell-exit',
 
-  // GreenThumb Database (v0.11 Phase 3)
-  DB_QUERY: 'db:query',
+  // Projects — narrow, fixed-query check (replaces the removed KO-SEC-002
+  // `db:query` raw-SQL passthrough; renderer never sends SQL across IPC).
+  PROJECTS_IS_EMPTY: 'projects:is-empty',
 
   // GreenThumb Error Logging (v0.11 Phase 3)
   LOG_ERROR: 'log:error',

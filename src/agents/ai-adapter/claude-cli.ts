@@ -161,10 +161,12 @@ export async function sendClaudeCliPrompt(
     // via stdin instead — Claude CLI's `--print` mode reads stdin when
     // no positional prompt arg is given.
     //
-    // --dangerously-skip-permissions: prevents interactive permission
-    // prompts when running headless (no TTY). Safe because we control
-    // the prompt.
-    const rawArgs: string[] = ['--print', '--dangerously-skip-permissions'];
+    // KO-SEC-003: scope the session to no tools instead of bypassing all
+    // permission checks. `--tools ''` disables every built-in tool, so
+    // there's nothing left that could trigger an interactive permission
+    // prompt during headless (`--print`, no TTY) runs — no bypass flag
+    // needed. This adapter only ever asks the CLI for a text completion.
+    const rawArgs: string[] = ['--print', '--tools', ''];
 
     // Only forward --model when the caller explicitly chose the claude-cli provider.
     // In the API-key-absent fallback path the config.model is a full Anthropic API ID

@@ -450,6 +450,22 @@ describe('Forge', () => {
             expect(firstCallPrompt).toContain('Initial error output');
         });
     });
+
+    describe('ensureDependencies', () => {
+        it('runs npm install with --ignore-scripts to contain generated-project lifecycle scripts (KO-SEC-004/019)', async () => {
+            mockExistsSync.mockReturnValue(true);
+            const executeCommandSpy = vi.spyOn(forge as any, 'executeCommand').mockResolvedValue({ ok: true, output: '' });
+            vi.spyOn(forge as any, 'reportProgress').mockResolvedValue(undefined);
+
+            await (forge as any).ensureDependencies(createTaskInfo());
+
+            expect(executeCommandSpy).toHaveBeenCalledWith(
+                expect.anything(),
+                'npm',
+                ['install', '--no-audit', '--no-fund', '--ignore-scripts']
+            );
+        });
+    });
 });
 
 // ── PR-4: design-pack injection into the bundle path ────

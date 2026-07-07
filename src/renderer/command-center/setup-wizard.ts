@@ -59,7 +59,7 @@ interface KageOpsBridge {
         readonly getState: () => Promise<IpcResult>;
         readonly advance: (input: unknown) => Promise<IpcResult>;
     };
-    readonly dbQuery: (sql: string, params: readonly unknown[]) => Promise<{ rows: ReadonlyArray<Record<string, unknown>> }>;
+    readonly projectsIsEmpty: () => Promise<{ empty: boolean }>;
     readonly setApiKey: (provider: string, key: string) => Promise<unknown>;
     /** Opens an external URL via the OS default browser. Routed through main. */
     readonly openExternal?: (url: string) => Promise<void>;
@@ -313,9 +313,8 @@ export async function shouldFireOnFirstLaunch(): Promise<boolean> {
         if (s.completedAt !== null) return false;
         if (s.step !== 'welcome') return false; // mid-walkthrough — leave alone
         // Defensive: if there are existing projects, don't ambush the user.
-        const proj = await k.dbQuery('SELECT COUNT(*)::text AS n FROM projects', []);
-        const n = Number(proj.rows?.[0]?.['n'] ?? 0);
-        return n === 0;
+        const proj = await k.projectsIsEmpty();
+        return proj.empty;
     } catch {
         // If detection fails, don't ambush the user — they can launch manually.
         return false;

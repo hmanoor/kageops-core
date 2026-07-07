@@ -960,7 +960,10 @@ export class Forge extends AutonautAgent {
 
         await this.reportProgress(task, 'Installing dependencies...');
         try {
-            await this.executeCommand(task, 'npm', ['install', '--no-audit', '--no-fund']);
+            // KO-SEC-004/019: --ignore-scripts stops an AI-generated
+            // package.json from running arbitrary lifecycle scripts
+            // (preinstall/postinstall etc.) unsandboxed on the host.
+            await this.executeCommand(task, 'npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts']);
         } catch (err) {
             this.log.warn({ err }, 'npm install failed — continuing');
         }

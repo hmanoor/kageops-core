@@ -100,9 +100,14 @@ export function stageFile(
     fs.mkdirSync(dir, { recursive: true });
 
     // Path traversal guard — staged paths must resolve under the
-    // staging dir (not escape via `../`).
+    // staging dir (not escape via `../`). KO-SEC-007/008/016: a bare
+    // startsWith() has no path-separator boundary, so a sibling dir like
+    // `<dir>-evil` (shares `<dir>` as a string prefix but is NOT nested
+    // inside it) would wrongly pass — require an exact match or a match
+    // followed by path.sep.
+    const resolvedDir = path.resolve(dir);
     const absStaged = path.resolve(dir, relativePath);
-    if (!absStaged.startsWith(path.resolve(dir))) {
+    if (absStaged !== resolvedDir && !absStaged.startsWith(resolvedDir + path.sep)) {
         throw new Error(`Path traversal detected: ${relativePath} escapes staging dir`);
     }
     fs.mkdirSync(path.dirname(absStaged), { recursive: true });
@@ -247,7 +252,14 @@ function sha256(content: string): string {
 
 function readCurrentSha256(repoPath: string, relativePath: string): string | null {
     if (repoPath === '') return null;
+    // KO-SEC-007/008/016: this used to resolve relativePath with no
+    // containment check at all — a `../`-laden path could hash an
+    // arbitrary file on the host outside the repo. Treat an escaping
+    // path the same as "file doesn't exist" (this only ever feeds a
+    // diff sha, never the file's contents).
+    const resolvedRepo = path.resolve(repoPath);
     const abs = path.resolve(repoPath, relativePath);
+    if (abs !== resolvedRepo && !abs.startsWith(resolvedRepo + path.sep)) return null;
     if (!fs.existsSync(abs)) return null;
     try {
         const buf = fs.readFileSync(abs);

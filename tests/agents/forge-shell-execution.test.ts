@@ -133,7 +133,9 @@ describe('Forge shell execution', () => {
 
             expect(mockSpawn).toHaveBeenCalledWith(
                 'npm',
-                ['install', '--no-audit', '--no-fund'],
+                // KO-SEC-004/019: --ignore-scripts contains lifecycle scripts
+                // from an AI-generated package.json.
+                ['install', '--no-audit', '--no-fund', '--ignore-scripts'],
                 expect.objectContaining({ cwd: '/tmp/test-repo' })
             );
         });

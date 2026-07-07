@@ -169,7 +169,10 @@ export function resolveBuildPlan(repoPath: string): BuildPlan {
         };
     }
 
-    const steps: BuildStepDef[] = [{ name: 'install', args: ['install'] }];
+    // KO-SEC-004/019: --ignore-scripts stops an AI-generated package.json
+    // from running arbitrary lifecycle scripts (preinstall/postinstall etc.)
+    // unsandboxed on the host during install.
+    const steps: BuildStepDef[] = [{ name: 'install', args: ['install', '--ignore-scripts'] }];
     if (hasBuild) steps.push({ name: 'build', args: ['run', 'build'] });
     if (hasTest) steps.push({ name: 'test', args: ['test'] });
 

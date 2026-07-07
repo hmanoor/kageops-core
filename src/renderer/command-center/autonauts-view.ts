@@ -11,6 +11,7 @@ import { AGENT_PROFILES, type AgentProfile } from './agent-profiles';
 import { getSigilHtml } from './sigils';
 import { MODELS, PROVIDERS, PRESETS, getPresetById, modelLabel, costTierLabel, presetModelIds } from '../../shared/model-registry';
 import { ThinkingRotator } from '../shared/thinking-rotator';
+import { sanitizeHtml } from '../shared/sanitize-html';
 import {
     renderIntercept,
     wireIntercept,
@@ -158,7 +159,7 @@ const AGENT_ORDER: readonly string[] = [
 // ── State ────────────────────────────────────────────
 
 let selectedAgent: string | null = 'scout'; // null = Team Overview
-interface ChatEntry {
+export interface ChatEntry {
     readonly role: 'user' | 'assistant';
     readonly text: string;
     readonly timestamp: string;
@@ -949,12 +950,16 @@ function renderChat(): string {
  * Render a single chat bubble — assistant messages run through `marked`
  * so `**bold**` and lists turn into real HTML; user messages are
  * escaped. Both surfaces include a timestamp meta line.
+ *
+ * KO-SEC-005/030: assistant text is AI-generated, so the markdown output
+ * is sanitized before it reaches innerHTML — never insert `marked.parse()`
+ * output directly.
  */
-function renderChatBubble(m: ChatEntry): string {
+export function renderChatBubble(m: ChatEntry): string {
     const time = formatRelativeTime(m.timestamp);
     const labelText = m.role === 'user' ? 'You' : 'Sensei';
     const body = m.role === 'assistant'
-        ? marked.parse(m.text ?? '', { async: false, gfm: true, breaks: true }) as string
+        ? sanitizeHtml(marked.parse(m.text ?? '', { async: false, gfm: true, breaks: true }) as string)
         : esc(m.text ?? '');
     return `
         <div class="au-chat-msg au-chat-msg--${m.role}">

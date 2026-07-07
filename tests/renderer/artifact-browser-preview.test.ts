@@ -4,6 +4,8 @@
  * Covers `classify` routing and the pure `renderPreviewHtml` output for
  * every kind (markdown, code, text, image, html, binary) plus the
  * unknown-extension fallback to plain text.
+ *
+ * @vitest-environment jsdom
  */
 
 import { describe, it, expect } from 'vitest';
@@ -124,6 +126,14 @@ describe('renderPreviewHtml', () => {
         const md = '# h\n\n```typescript\nconst x = 1;\n```\n';
         const out = renderPreviewHtml(ctx('doc.md'), makeFile({ content: md }));
         expect(out.html).toMatch(/language-typescript/);
+    });
+
+    it('sanitizes an embedded <script> tag in rendered markdown (KO-SEC-005/030)', () => {
+        const md = 'Some notes.\n\n<script>alert(1)</script>\n\nMore notes.';
+        const out = renderPreviewHtml(ctx('doc.md'), makeFile({ content: md }));
+        expect(out.kind).toBe('markdown');
+        expect(out.html).not.toContain('<script');
+        expect(out.html).toContain('Some notes');
     });
 
     it('builds a data URL for images', () => {

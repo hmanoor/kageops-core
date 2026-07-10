@@ -51,6 +51,8 @@ export const GATE_ENV = {
     moduleInit: 'KAGEOPS_GATE_MODULE_INIT',
     /** G6 — generated migrations apply cleanly to a fresh DB. */
     migration: 'KAGEOPS_GATE_MIGRATION',
+    /** P1-W4 — the Drizzle schema actually has the brief's domain tables (not just scaffold boilerplate). */
+    schemaCoherence: 'KAGEOPS_GATE_SCHEMA_COHERENCE',
     /** Generated Playwright e2e suite runs green in the build gate. */
     e2e: 'KAGEOPS_GATE_E2E',
 } as const;

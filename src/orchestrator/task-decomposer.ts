@@ -12,6 +12,8 @@ import { detectSimpleApp } from '../shared/simple-app-detector';
 import { filterShippedFeatureTasks } from './shipped-feature-filter';
 import { recoverTaskArray, decompositionParseFailed } from './decompose-json';
 import { phaseFallbackTasks, decomposeFallbackEnabled } from './phase-fallback-tasks';
+import { ensureSchemaFirstSpine } from './critical-path-spine';
+import { applyBundlePhaseBudget } from './bundle-phase-budget';
 
 // Deterministic SIMPLE-APP GUARD caps — enforced after parse even if the LLM
 // ignores the prompt rule. Matches the values documented in the prompt.
@@ -23,6 +25,14 @@ const SIMPLE_APP_PHASE_CAPS: Record<string, number> = {
     'development': 1,
     'launch-growth': 1,
 };
+
+/**
+ * P0-W2 — bundles whose apps are backed by a real database and therefore need
+ * a schema-first critical-path spine at development time. Extend as new
+ * DB-backed stack bundles land. Static bundles (vanilla-html) are absent —
+ * they have no schema. See docs/plans/harness-coherence-fix-plan.md.
+ */
+const DB_BACKED_BUNDLES: ReadonlySet<string> = new Set(['stack::nextjs-saas']);
 
 const log = createLogger('TaskDecomposer');
 
@@ -287,6 +297,38 @@ export class TaskDecomposer {
                         { projectId, phase, parseFailed, devMustBuild, fallbackCount: tasks.length },
                         'BPF-37: decomposition produced 0 tasks after retries/recovery — using deterministic phase fallback',
                     );
+                }
+            }
+        }
+
+        // P0-W5 + P0-W2 — DB-backed bundle budget + schema-first spine.
+        // W5: hard-cap the planning phases and strip planning/doc task types out
+        // of development, so the run spends its budget building rather than
+        // planning (the LinkStash re-run drowned development in a Gantt-chart
+        // project plan and never reached implementation). W2 (development only):
+        // guarantee a schema task exists, runs first, and that feature tasks
+        // depend on it. Both deterministic; gated to DB-backed bundles.
+        if (tasks.length > 0) {
+            const needsSchema = await this.projectNeedsSchema(projectId);
+            if (needsSchema) {
+                const beforeBudget = tasks.length;
+                tasks = applyBundlePhaseBudget(tasks, phase) as DecomposedTask[];
+                if (tasks.length !== beforeBudget) {
+                    log.info(
+                        { projectId, phase, beforeCount: beforeBudget, afterCount: tasks.length },
+                        'P0-W5: applied bundle phase budget (cap planning / strip non-impl from development)',
+                    );
+                }
+
+                if (phase === 'development') {
+                    const beforeSpine = tasks.length;
+                    tasks = ensureSchemaFirstSpine(tasks, { needsSchema: true }) as DecomposedTask[];
+                    if (tasks.length !== beforeSpine) {
+                        log.info(
+                            { projectId, phase, beforeCount: beforeSpine, afterCount: tasks.length },
+                            'P0-W2: injected schema-first critical-path spine for DB-backed bundle',
+                        );
+                    }
                 }
             }
         }
@@ -602,6 +644,29 @@ DEVELOPMENT PHASE RULES:
                 'getAllowedTaskTypes failed — falling back to free-pick decomposer',
             );
             return null;
+        }
+    }
+
+    /**
+     * P0-W2 — true when the project's selected bundle is DB-backed and
+     * therefore needs a schema-first spine at development time. Reads
+     * projects.selected_bundle (populated by the bundle matcher early in the
+     * run). Any failure → false (the spine is an enhancement, never a blocker).
+     */
+    private async projectNeedsSchema(projectId: string): Promise<boolean> {
+        try {
+            const row = await getOne<{ selected_bundle: string | null }>(
+                'SELECT selected_bundle FROM projects WHERE id = $1',
+                [projectId],
+            );
+            const bundle = row?.selected_bundle ?? null;
+            return bundle !== null && DB_BACKED_BUNDLES.has(bundle);
+        } catch (err) {
+            log.warn(
+                { projectId, err: err instanceof Error ? err.message : String(err) },
+                'projectNeedsSchema query failed — skipping schema-first spine',
+            );
+            return false;
         }
     }
 

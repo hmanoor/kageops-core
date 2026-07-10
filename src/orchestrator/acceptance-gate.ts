@@ -35,6 +35,7 @@ import { runRuntimeSmoke } from './runtime-smoke-check';
 import { scanRepoForOrphanedHalves, scanRepoForMissingRequiredInitiator } from './vertical-slice-check';
 import { scanRepoForPaymentIntegrity } from './payment-integrity-check';
 import { scanRepoForFabrication } from './fabrication-audit-check';
+import { scanRepoForSchemaCoherence } from './schema-coherence-check';
 import { gateMode, GATE_ENV } from './gate-modes';
 import { checkHtmlIdsInSource } from './html-id-source-check';
 import { isHostingDisabled } from '../shared/hosting-mode';
@@ -78,7 +79,10 @@ export type AcceptanceCheck =
     // P2-05 (AcceptanceGate v2): new checks for build-tests-preview kind.
     | 'preview-url-missing'
     | 'preview-url-not-200'
-    | 'preview-url-unreachable';
+    | 'preview-url-unreachable'
+    // P1-W4 (schema coherence): DB-backed app whose Drizzle schema still has
+    // only the scaffold's boilerplate tables — no domain tables added.
+    | 'domain-schema-missing';
 
 export interface AcceptanceViolation {
     readonly check: AcceptanceCheck;
@@ -434,6 +438,7 @@ export class AcceptanceGate {
         const sliceViolations = [
             ...this.runVerticalSliceChecks(repoPath, description),
             ...this.runFabricationAudit(repoPath),
+            ...this.runSchemaCoherenceCheck(repoPath),
             ...idViolations,
         ];
 
@@ -677,6 +682,32 @@ export class AcceptanceGate {
             log.warn(
                 { repoPath, err: err instanceof Error ? err.message : String(err) },
                 'fabrication audit threw — continuing acceptance',
+            );
+            return [];
+        }
+    }
+
+    /**
+     * P1-W4 schema coherence: flag a DB-backed app whose Drizzle schema still
+     * contains only the scaffold's boilerplate tables — the domain tables the
+     * brief requires were never added, so every API/page needing domain data
+     * references a table that doesn't exist. Behind `KAGEOPS_GATE_SCHEMA_COHERENCE`
+     * — block ⇒ 'must', warn ⇒ 'should', off ⇒ skipped. Never throws.
+     */
+    private runSchemaCoherenceCheck(repoPath: string): readonly AcceptanceViolation[] {
+        const mode = gateMode(GATE_ENV.schemaCoherence);
+        if (mode === 'off') return [];
+        try {
+            return scanRepoForSchemaCoherence(repoPath, fs).map((v) => ({
+                check: v.check,
+                expected: v.expected,
+                message: v.message,
+                severity: mode === 'block' ? ('must' as const) : ('should' as const),
+            }));
+        } catch (err) {
+            log.warn(
+                { repoPath, err: err instanceof Error ? err.message : String(err) },
+                'schema-coherence check threw — continuing acceptance',
             );
             return [];
         }

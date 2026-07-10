@@ -21,6 +21,7 @@ import { evidenceFromFiles } from '../verification-gate';
 import { query } from '../../db/client';
 import { detectSimpleApp } from '../../shared/simple-app-detector';
 import { buildDesignContext, buildBundleDesignContext } from '../design/design-pack';
+import { buildExistingFileContext, KEY_BUNDLE_FILES } from '../forge-file-context';
 import { loadBundles } from '../../bundles/bundle-loader';
 import { BundleRegistry } from '../../bundles/bundle-registry';
 import { resolveBundleForProject } from './forge-bundle-dispatch';
@@ -1272,11 +1273,29 @@ export class Forge extends AutonautAgent {
             vars: this.bundlePromptVars(task),
         });
         const filesContext = this.getExistingFilesContext(task.repoPath);
+        // Inject the CURRENT CONTENT of the key files this feature is likely to
+        // edit (the Drizzle schema + the task's own target file) so Forge
+        // extends them instead of editing blind. Without this, Forge could not
+        // "see current SQL" and emitted a standalone migration that added the
+        // domain table to the SQL but never to lib/db/schema.ts (the ORM's
+        // source of truth) — the Tier-3 benchmark's schema-never-wired failure.
+        const keyPaths = Array.from(
+            new Set(
+                [...KEY_BUNDLE_FILES, task.outputPath].filter(
+                    (p): p is string => typeof p === 'string' && p.length > 0,
+                ),
+            ),
+        );
+        const existingContentContext = buildExistingFileContext(
+            this.collectRevisionFiles(task.repoPath, keyPaths),
+        );
         const docContext = await this.gatherContext(task);
         // Same design discipline as setupBundleProject so features added later
         // stay visually coherent with the established palette + restraint.
         const designContext = buildBundleDesignContext();
-        const context = [docContext, filesContext, designContext].filter(Boolean).join('\n\n');
+        const context = [docContext, filesContext, existingContentContext, designContext]
+            .filter(Boolean)
+            .join('\n\n');
         const response = await this.askAI(`${prompt}\n\n${context}`);
         await this.writeOutputFiles(task, response.text);
 

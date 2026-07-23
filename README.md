@@ -1,6 +1,3 @@
-<!-- Public README for the kageops-core repository. Staged here; copied to the
-     public repo root during the clean-seed / re-sync. -->
-
 <div align="center">
 
 <picture>

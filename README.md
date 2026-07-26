@@ -297,6 +297,12 @@ kill-switch — ending at your first New Project screen.
 
 https://github.com/user-attachments/assets/ce1a32b3-4419-4181-b78b-21ff2312cdbe
 
+**Episode 02 — Your first project: writing the brief** (1:44). The New Project
+screen end to end: brief-writing, project types + deployment config, the
+Phases & Tasks tree, budget and trust, and Dry Run vs Create & Start.
+
+https://github.com/user-attachments/assets/b4b63d0c-ca79-4373-9f24-de8e11bd386c
+
 ---
 
 ## Contributing

@@ -136,9 +136,9 @@ const KNOWN_MODELS: readonly string[] = [
     'ollama/gpt-oss:120b-cloud',
     'ollama/qwen3.5:9b',
     'openrouter/anthropic/claude-sonnet-4',
-    'openrouter/anthropic/claude-haiku-3-5',
+    'openrouter/anthropic/claude-haiku-4.5',
     'openrouter/google/gemini-2.5-flash',
-    'openrouter/deepseek/deepseek-chat-v3',
+    'openrouter/deepseek/deepseek-v4-flash',
     'openai/gpt-4o',
     'openai/gpt-4o-mini',
 ];

@@ -68,6 +68,7 @@ const COST_PER_M_TOKENS: Record<string, { input: number; output: number }> = {
     'deepseek-chat':              { input: 0.27, output: 1.10 },
     'deepseek-coder':             { input: 0.27, output: 1.10 },
     'deepseek-r1':                { input: 0.55, output: 2.19 },
+    'deepseek-v4-flash':          { input: 0.14, output: 0.28 },
 
     // F-363: subscription CLIs no longer hardcoded to $0. We charge them at
     // the equivalent API rate so budget-kill + cost dashboards have a real

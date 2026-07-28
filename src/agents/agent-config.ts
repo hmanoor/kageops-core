@@ -68,8 +68,8 @@ export const OPENROUTER_PRESETS = {
     coding: {
         forge:     'openrouter/anthropic/claude-sonnet-4',    // best code quality, ~3-5s
         blueprint: 'openrouter/anthropic/claude-sonnet-4',    // architecture, large context
-        vigil:     'openrouter/anthropic/claude-haiku-3-5',   // fast code review, ~1-2s
-        cipher:    'openrouter/anthropic/claude-haiku-3-5',   // schema design
+        vigil:     'openrouter/anthropic/claude-haiku-4.5',   // fast code review, ~1-2s
+        cipher:    'openrouter/anthropic/claude-haiku-4.5',   // schema design
     },
     general: {
         scout:     'openrouter/google/gemini-2.5-flash',      // very fast, cheap

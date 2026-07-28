@@ -303,6 +303,49 @@ Phases & Tasks tree, budget and trust, and Dry Run vs Create & Start.
 
 https://github.com/user-attachments/assets/b4b63d0c-ca79-4373-9f24-de8e11bd386c
 
+**Episode 03 — The live run, end to end** (2:11). A real supervised run filmed
+start to finish: six phases, six on-camera approvals, agents working in
+timelapse, and completion.
+
+https://github.com/user-attachments/assets/4c1fdc49-8a68-4c11-a55c-c9980e76626b
+
+**Episode 04 — What did it build?** (1:20). Reviewing the output honestly:
+Completed tab, artifact browser, the generated code, the build report, and the
+produced page rendered live.
+
+https://github.com/user-attachments/assets/b6158b73-bcd6-4426-b75a-8815c7140f65
+
+**Episode 05 — The Command Center tour** (1:36). Operating modes, project board,
+orchestration flow graph, the bottom panel (activity, approvals, logs, build),
+agent roster, model routing, cost intel, and the Sensei chat dock.
+
+https://github.com/user-attachments/assets/05809cef-8584-4bc4-9ba7-be7913b31e12
+
+**Episode 06 — Agents & model routing** (1:36). The nine-agent roster and
+scorecard, per-agent model config, the preset grid with a switch on camera,
+fallback chains, and custom presets.
+
+https://github.com/user-attachments/assets/6be35ead-3b23-4c07-bd9c-a363a0ffb58d
+
+**Episode 07 — Trust, gates & intervention** (1:24). A live run where a gate is
+approved, the next is **denied** — and returns after rework — plus pause/resume
+mid-run and the cascade to completion.
+
+https://github.com/user-attachments/assets/4382aaea-e885-42a7-915b-ed36dde0a3ef
+
+**Episode 08 — Cost controls** (1:57). The budget cap as a hard kill,
+dry-run-first, the Cost Intelligence ledger, editing a run's cap mid-flight, and
+the guardrail layers underneath.
+
+https://github.com/user-attachments/assets/8d95a406-ab0e-4a4a-b0ff-b45be6e9c82c
+
+**Episode 09 — Headless runner & CLI** (2:12). The engine from a plain terminal:
+env config, the dry-run plan and cost estimate, a live run in timelapse — ending
+with the acceptance gate refusing to sign off an artifact that missed a required
+element.
+
+https://github.com/user-attachments/assets/7603589b-2a50-43ae-858b-3a665c51a75c
+
 ---
 
 ## Contributing

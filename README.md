@@ -19,7 +19,10 @@ hard USD kill-switch you control.
 [![Node](https://img.shields.io/badge/Node-20%2B-339933.svg?style=flat-square)](#quickstart)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-5BB377.svg?style=flat-square)](CONTRIBUTING.md)
 
-[Quickstart](#quickstart) · [How it works](#how-it-works) · [The Autonauts](#meet-the-autonauts) · [Why it's different](#why-kageops-is-different) · [Open core](#whats-in-this-repo-open-core) · [Contributing](CONTRIBUTING.md)
+[Quickstart](#quickstart) · [**Watch it work →**](docs/how-to/README.md) · [How it works](#how-it-works) · [The Autonauts](#meet-the-autonauts) · [Why it's different](#why-kageops-is-different) · [Open core](#whats-in-this-repo-open-core) · [Contributing](CONTRIBUTING.md)
+
+**▶ Nine narrated how-to videos** — real screen captures of the actual app, from
+first launch to a full run. **[Watch the series →](docs/how-to/README.md)**
 
 </div>
 

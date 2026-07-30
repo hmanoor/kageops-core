@@ -13,6 +13,7 @@ import { isHostingDisabled } from '../shared/hosting-mode';
 import { BuildVerificationGate, BuildVerificationResult, BuildStepName } from './build-verification-gate';
 import { AcceptanceGate, AcceptanceResult, AcceptanceViolation } from './acceptance-gate';
 import { loadBundles } from '../bundles/bundle-loader';
+import { type Refusal, formatRefusalForHuman } from '../shared/refusal';
 import { BundleRegistry } from '../bundles/bundle-registry';
 import { parseBundleKey } from '../agents/specialists/forge-bundle-dispatch';
 import type { BundleAcceptanceKind } from '../bundles/types';
@@ -97,6 +98,14 @@ export class PhaseGateManager {
     private readonly acceptanceGate: AcceptanceGate | null;
     // P2-05: lazy bundle registry for resolving acceptance.kind per project.
     private bundleRegistry: BundleRegistry | null = null;
+    /**
+     * Intents closed by a refusal, keyed by `Refusal.intentId`. A refusal is
+     * terminal, so a repeat refusal of the same intent must not re-publish.
+     * Cleared when the operator resolves the gate (approve/deny/cancel).
+     * In-memory for now: a restart re-opens the intent, which is the safe
+     * direction (the operator sees it again rather than never).
+     */
+    private readonly openRefusals = new Map<string, Refusal>();
 
     constructor(
         eventBus: EventBus,
@@ -424,7 +433,7 @@ export class PhaseGateManager {
      *                auto-approve MUST refuse these. When omitted, this is
      *                a clean phase-gate pass and auto-approve is safe.
      */
-    async requestApproval(projectId: string, reason?: string): Promise<void> {
+    async requestApproval(projectId: string, reason?: string, refusal?: Refusal): Promise<void> {
         const project = await getOne<ProjectPhaseInfo>(
             'SELECT id, phase, trust_level, status FROM projects WHERE id = $1',
             [projectId]
@@ -434,15 +443,34 @@ export class PhaseGateManager {
             throw new Error(`Project not found: ${projectId}`);
         }
 
+        // A refusal CLOSES its intent. If the same intent refuses again while
+        // still unresolved, re-publishing would spam the operator — this is
+        // exactly the BPF-28 loop, where an auto-approving harness "approved"
+        // a refusal that approval cannot satisfy and the gate re-raised ~70
+        // times. Record it once, log the repeat, and stay quiet.
+        if (refusal !== undefined) {
+            const seen = this.openRefusals.get(refusal.intentId);
+            if (seen !== undefined) {
+                log.warn(
+                    { projectId, intentId: refusal.intentId, attemptsMade: refusal.attemptsMade },
+                    'Refusal re-raised for an already-closed intent — not re-publishing',
+                );
+                return;
+            }
+            this.openRefusals.set(refusal.intentId, refusal);
+        }
+
         // Mark project as waiting for approval
         await query(
             `UPDATE projects SET status = 'awaiting-approval' WHERE id = $1`,
             [projectId]
         );
 
-        const message = reason !== undefined
-            ? `Phase "${project.phase}" blocked: ${reason}`
-            : `Phase "${project.phase}" complete. Awaiting human approval to proceed.`;
+        const message = refusal !== undefined
+            ? formatRefusalForHuman(refusal)
+            : reason !== undefined
+                ? `Phase "${project.phase}" blocked: ${reason}`
+                : `Phase "${project.phase}" complete. Awaiting human approval to proceed.`;
 
         await this.eventBus.publish('approval.required', {
             projectId,
@@ -452,10 +480,33 @@ export class PhaseGateManager {
                 trustLevel: project.trust_level,
                 message,
                 ...(reason !== undefined ? { reason } : {}),
+                // Structured refusal rides alongside the prose so consumers
+                // (UI verbs, the next planner turn) get the objects rather
+                // than having to re-parse English.
+                ...(refusal !== undefined ? { refusal } : {}),
             },
         });
 
         log.info({ projectId, phase: project.phase, reason }, 'Approval requested');
+    }
+
+    /**
+     * Forget every closed intent for a project. Called when the operator
+     * resolves a gate, so the next genuine refusal is published rather than
+     * silently deduped against a stale entry.
+     */
+    clearRefusalsForProject(projectId: string): void {
+        for (const key of [...this.openRefusals.keys()]) {
+            if (key.startsWith(`${projectId}:`)) this.openRefusals.delete(key);
+        }
+    }
+
+    /** The refusal currently blocking a project, if any. */
+    getOpenRefusal(projectId: string): Refusal | undefined {
+        for (const [key, refusal] of this.openRefusals) {
+            if (key.startsWith(`${projectId}:`)) return refusal;
+        }
+        return undefined;
     }
 
     /**
@@ -470,6 +521,10 @@ export class PhaseGateManager {
         if (project === null) {
             throw new Error(`Project not found: ${projectId}`);
         }
+
+        // The operator has acted, so any intent we closed for this project is
+        // now resolved — drop it so a genuine future refusal can surface.
+        this.clearRefusalsForProject(projectId);
 
         const nextPhase = await this.getNextEnabledPhase(projectId, project.phase as Phase);
 

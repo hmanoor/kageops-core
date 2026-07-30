@@ -9,6 +9,9 @@ name: CLA Assistant
 # scope on an account that can push to this repo, and add it as the repository
 # secret `PERSONAL_ACCESS_TOKEN` (Settings → Secrets and variables → Actions).
 # Until that secret exists the workflow is inert — it only runs on PRs.
+#
+# NOTE: `branch` below must point at an UNPROTECTED branch (cla-signatures).
+# See the comment beside it — pointing it at main silently breaks the gate.
 
 on:
   issue_comment:
@@ -38,7 +41,13 @@ jobs:
         with:
           path-to-signatures: '.github/cla/signatures.json'
           path-to-document: 'https://github.com/hmanoor/kageops-core/blob/main/CLA.md'
-          branch: 'main'
+          # Signatures CANNOT live on a protected branch: the action commits
+          # the file directly, and branch protection on main rejects it with
+          # 'Changes must be made through a pull request' — which the action
+          # then reports as 'committers have to sign the CLA', even though the
+          # contributor did sign. That made the gate unpassable for every
+          # outside contributor. Store them on a dedicated unprotected branch.
+          branch: 'cla-signatures'
           allowlist: 'dependabot[bot],github-actions[bot]'
           custom-notsigned-prcomment: >-
             Thank you for your contribution! Before we can merge it, please read

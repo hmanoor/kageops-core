@@ -35,6 +35,7 @@ import {
     type PersistedSenseiMessage,
 } from './sensei-chat-repository';
 import { type Plan, type PlanGate, openPlanGate } from '../shared/plan-gate';
+import { createRefusal } from '../shared/refusal';
 import { TierLimitError } from '../shared/tier-limit-error';
 import { type SetupCopilotGate, noopSetupCopilotGate } from './setup-copilot-gate';
 
@@ -3832,15 +3833,26 @@ export class Sensei {
                 { projectId, finishedCount, maxAcceptanceRetries, restored, bestViolations: bestCount },
                 'Acceptance remediation limit reached — requesting human approval'
             );
-            const expected = violations.map((v) => v.expected).join(', ');
-            const restoreNote = restored && bestCount !== undefined
-                ? ` (workspace restored to best-attempt with ${bestCount} violation${bestCount === 1 ? '' : 's'})`
-                : '';
-            await this.gateManager.requestApproval(
+            // Refusal is a first-class terminal outcome, not a prose string.
+            // The violation objects survive intact so the UI can offer the
+            // right verbs and the next planner turn reads structure rather
+            // than re-parsing English. See src/shared/refusal.ts.
+            const refusal = createRefusal({
+                reason: 'acceptance-violations',
                 projectId,
-                `acceptance gate failed after ${finishedCount} remediation attempts${restoreNote} — ` +
-                `still missing: ${expected || '(unspecified)'}`
-            );
+                phase: 'development',
+                attemptsMade: finishedCount,
+                details: violations.map((v) => ({
+                    check: v.check,
+                    expected: v.expected,
+                    message: v.message,
+                    severity: v.severity,
+                })),
+                ...(restored && bestCount !== undefined
+                    ? { bestAttempt: { violations: bestCount, restored } }
+                    : {}),
+            });
+            await this.gateManager.requestApproval(projectId, refusal.summary, refusal);
             return;
         }
 

@@ -8,6 +8,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync, spawn } from 'child_process';
+import { gitIdentityArgs } from '../shared/git-config';
 import { createLogger } from '../shared/logger';
 import {
     streamSubprocessOutput,
@@ -117,7 +118,7 @@ export async function cloneTemplate(
             await runGitStreamed(targetPath, ['add', '.'], streamCtx);
             await runGitStreamed(
                 targetPath,
-                ['commit', '-m', 'Initial project setup via KageOps'],
+                [...gitIdentityArgs(), 'commit', '-m', 'Initial project setup via KageOps'],
                 streamCtx,
             );
         } else {
@@ -125,8 +126,11 @@ export async function cloneTemplate(
             // care about live tailing (e.g. tests, CLI bootstrap).
             execSync('git init', { cwd: targetPath, stdio: 'pipe' });
             execSync('git add .', { cwd: targetPath, stdio: 'pipe' });
+            // Identity pinned per-invocation: inheriting the developer's
+            // global config attributed machine commits to the human, and
+            // failed outright where no global identity was configured.
             execSync(
-                'git commit -m "Initial project setup via KageOps"',
+                `git ${gitIdentityArgs().join(' ')} commit -m "Initial project setup via KageOps"`,
                 { cwd: targetPath, stdio: 'pipe' }
             );
         }

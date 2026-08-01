@@ -865,6 +865,34 @@ body.panel-resizing * {
     margin-top: 2px;
 }
 
+/* Clickable "where this project lives" path → opens the OS folder */
+.project-card .project-path {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    margin-top: 4px;
+    padding: 2px 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    text-align: left;
+}
+.project-card .project-path:hover {
+    color: var(--moss, #5bb377);
+}
+.project-card .project-path svg { flex: 0 0 auto; }
+.project-card .project-path-text {
+    font-family: var(--mono, ui-monospace, monospace);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;          /* keep the meaningful tail (…/projects/name) visible */
+    text-align: left;
+}
+
 /* ── Phase badges ────────────────────────── */
 
 .phase-pill {
@@ -11912,4 +11940,99 @@ details.panel-intro[open] summary.panel-intro__toggle::before {
     margin: 4px 0 0 24px;
     font-size: 11px;
     color: var(--muted, rgba(255,255,255,0.45));
+}
+
+/* ── Refused approvals ────────────────────────────────────────────────
+   A refusal is terminal: the run could not complete and approving
+   changes nothing. It reads differently from a normal phase gate so the
+   operator does not pattern-match it to "click Approve".            */
+
+.approval-item--refused {
+    border-left: 3px solid var(--warn, #d08a3e);
+}
+
+.approval-detail--refused strong {
+    color: var(--warn, #d08a3e);
+}
+
+.approval-refusal-summary {
+    margin-top: 4px;
+    color: var(--text-muted, #9aa0a6);
+    font-size: 12px;
+}
+
+.approval-refusal-list {
+    margin: 8px 0 6px;
+    padding-left: 18px;
+    font-size: 12px;
+    color: var(--text-muted, #9aa0a6);
+}
+
+.approval-refusal-list code {
+    color: var(--text, #e8eaed);
+    font-size: 11px;
+}
+
+/* What would have to change for another attempt to be worth making. */
+.approval-refusal-premise {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: rgba(208, 138, 62, 0.08);
+    color: var(--text-muted, #9aa0a6);
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.btn-refusal-chat,
+.btn-refusal-retry {
+    background: transparent;
+    border: 1px solid var(--border, #2c2f33);
+    color: var(--text, #e8eaed);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.btn-refusal-chat:hover,
+.btn-refusal-retry:hover {
+    border-color: var(--accent, #5BB377);
+    color: var(--accent, #5BB377);
+}
+
+/* ── Phase assumption on a normal gate ────────────────────────────────
+   Makes the operator approve a claim they can disagree with rather
+   than a phase name.                                                */
+
+.approval-assumption {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-left: 2px solid var(--border, #2c2f33);
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-muted, #9aa0a6);
+}
+
+/* Low-confidence or agent-invented claims — the five-wasted-hours ones. */
+.approval-assumption--review {
+    border-left-color: var(--warn, #d08a3e);
+    background: rgba(208, 138, 62, 0.06);
+}
+
+.approval-assumption-label {
+    color: var(--accent, #5BB377);
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.approval-assumption-cost,
+.approval-assumption-meta {
+    display: block;
+    margin-top: 2px;
+}
+
+.approval-assumption-meta {
+    opacity: 0.7;
+    font-size: 10px;
 }

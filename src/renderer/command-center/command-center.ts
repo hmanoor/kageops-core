@@ -525,6 +525,9 @@ interface ProjectInfo {
     // bridges that don't surface the field don't break the renderer.
     reopenCount?: number;
     lastReopenedAt?: string | null;
+    // On-disk workspace path (repo_path). Optional/defaulted so older
+    // bridges that don't surface it don't break the renderer.
+    repoPath?: string | null;
 }
 
 // P1-05b: one iteration cycle as returned by `iteration:get-history`.
@@ -625,6 +628,31 @@ interface ApprovalInfo {
         completed: number;
         failed: number;
     };
+    /**
+     * Present when the run REFUSED rather than reached a normal phase gate.
+     * A refusal is terminal and cannot be satisfied by "Approve" — offering
+     * that verb is what produced the ~70x re-raise loop (BPF-28). When this
+     * is set the card renders terminal verbs instead.
+     */
+    refusal?: {
+        readonly summary: string;
+        readonly premiseForRetry: string;
+        readonly attemptsMade: number;
+        readonly details: readonly {
+            readonly check: string;
+            readonly expected: string;
+            readonly message: string;
+            readonly severity: string;
+        }[];
+    };
+    /** The claim this phase's work rests on, if one was elicited. */
+    assumption?: {
+        readonly claim: string;
+        readonly ifWrong: string;
+        readonly confidence: string;
+        readonly basis: string;
+    };
+    assumptionWarrantsReview?: boolean;
 }
 
 interface ApprovalDetailTask {
@@ -2430,6 +2458,7 @@ function renderProjects(projects: ProjectInfo[]): void {
                 </div>
                 <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
                 <div class="task-count">${p.taskCounts.completed}/${p.taskCounts.total} tasks</div>
+                ${p.repoPath ? `<button class="project-path" data-role="open-folder" data-id="${p.id}" title="Open folder: ${escapeHtml(p.repoPath)}"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h4l1 1.5h5v5.5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3Z"/></svg><span class="project-path-text">${escapeHtml(p.repoPath)}</span></button>` : ''}
                 ${actions === '' ? '' : `<div class="project-actions">${actions}</div>`}
             </div>
         `;
@@ -2445,9 +2474,22 @@ function renderProjects(projects: ProjectInfo[]): void {
             if (target.closest('.btn-edit') !== null) return;
             if (target.closest('.iteration-badge') !== null) return;
             if (target.closest('.project-action-btn') !== null) return;
+            if (target.closest('.project-path') !== null) return;
             const projectId = card.dataset['id'] ?? '';
             const projectName = card.dataset['name'] ?? '';
             openTaskOutputPanel(projectId, projectName);
+        });
+    });
+
+    // Project folder path → open the workspace in the OS file manager
+    container.querySelectorAll<HTMLButtonElement>('.project-path').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const projectId = btn.dataset['id'] ?? '';
+            if (projectId !== '') {
+                // filePath '.' resolves to the project's repo_path (the folder).
+                void kageOps.openPath({ projectId, filePath: '.' }).catch(() => { /* best-effort */ });
+            }
         });
     });
 
@@ -2850,6 +2892,54 @@ function renderApprovals(approvals: ApprovalInfo[]): void {
             ? `<span class="approval-task-summary">${tc.completed}/${tc.total} tasks done${tc.failed > 0 ? `, ${tc.failed} failed` : ''}</span>`
             : '';
 
+        // A refusal is terminal: the run could not complete and no amount of
+        // approving changes that. Rendering Approve/Deny here is what made the
+        // gate re-raise ~70 times, so refusals get their own verbs.
+        if (a.refusal !== undefined) {
+            const blocking = a.refusal.details.filter((d) => d.severity === 'must');
+            const unmet = blocking.length > 0 ? blocking : a.refusal.details;
+            return `
+        <div class="approval-item approval-item--refused" data-id="${a.id}">
+            <div class="approval-header">
+                <div class="approval-info">
+                    <div class="approval-project">${escapeHtml(a.name)}</div>
+                    <div class="approval-detail approval-detail--refused">
+                        <strong>Cannot complete — human action required</strong>
+                        <div class="approval-refusal-summary">${escapeHtml(a.refusal.summary)}</div>
+                    </div>
+                    ${unmet.length > 0 ? `
+                    <ul class="approval-refusal-list">
+                        ${unmet.map((d) => `<li><code>${escapeHtml(d.check)}</code> — ${escapeHtml(d.message)}</li>`).join('')}
+                    </ul>` : ''}
+                    <div class="approval-refusal-premise">${escapeHtml(a.refusal.premiseForRetry)}</div>
+                </div>
+                <div class="approval-actions">
+                    <button class="btn-approval-details" data-id="${a.id}" title="View details">▶ Details</button>
+                    <button class="btn-refusal-chat" data-action="open-chat" data-id="${a.id}"
+                            title="Discuss with Sensei and change the brief">Open chat</button>
+                    <button class="btn-refusal-retry" data-action="retry-with-change" data-id="${a.id}"
+                            title="Only meaningful once something has changed">Retry with a change</button>
+                    <button class="btn-deny" data-action="deny" data-id="${a.id}"
+                            title="Abandon this phase">Abandon</button>
+                </div>
+            </div>
+            <div class="approval-details-panel" id="approval-details-${a.id}" style="display:none">
+                <div class="approval-details-loading">Loading details...</div>
+            </div>
+        </div>`;
+        }
+
+        // The claim this phase rests on, so the operator approves something
+        // falsifiable rather than a phase name.
+        const assumptionBlock = a.assumption !== undefined
+            ? `<div class="approval-assumption${a.assumptionWarrantsReview === true ? ' approval-assumption--review' : ''}">
+                   <span class="approval-assumption-label">Assumes</span>
+                   ${escapeHtml(a.assumption.claim)}
+                   <span class="approval-assumption-cost">If wrong: ${escapeHtml(a.assumption.ifWrong)}</span>
+                   <span class="approval-assumption-meta">${escapeHtml(a.assumption.confidence)} confidence · ${escapeHtml(a.assumption.basis)}</span>
+               </div>`
+            : '';
+
         return `
         <div class="approval-item" data-id="${a.id}">
             <div class="approval-header">
@@ -2859,6 +2949,7 @@ function renderApprovals(approvals: ApprovalInfo[]): void {
                         Phase: <strong>${escapeHtml(formatPhaseName(a.phase))}</strong> — awaiting approval
                         ${taskSummary}
                     </div>
+                    ${assumptionBlock}
                     ${progressBar}
                 </div>
                 <div class="approval-actions">
@@ -2901,6 +2992,39 @@ function renderApprovals(approvals: ApprovalInfo[]): void {
     //  2. The approved row never appeared in Approval History because
     //     the history table is only re-rendered on the next renderApprovals
     //     pass. We force a refreshAll() so the granted event shows up.
+    // Refusal verbs. "Open chat" takes the operator to Sensei so they can
+    // change the brief \u2014 the only thing that makes a further attempt
+    // meaningful, since the refusal's premise has not changed on its own.
+    container.querySelectorAll('.btn-refusal-chat').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = (btn as HTMLButtonElement).dataset.id;
+            if (id === undefined) return;
+            // The Sensei dock lives on Mission Control, not its own view.
+            switchToView('mc');
+        });
+    });
+
+    // "Retry with a change" is deliberately the same underlying call as
+    // approve, but labelled honestly: it only makes sense once the operator
+    // has altered something. The label is the guardrail.
+    container.querySelectorAll('.btn-refusal-retry').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const el = btn as HTMLButtonElement;
+            const id = el.dataset.id;
+            if (id === undefined) return;
+            void runApprovalAction({
+                button: el,
+                projectId: id,
+                pendingLabel: 'Retrying\u2026',
+                resultLabel: 'Retrying',
+                resultBadgeClass: 'badge--approved',
+                resultIcon: 'check-circle',
+                toastTitle: 'Retrying after change',
+                run: () => kageOps.approveGate(id),
+            });
+        });
+    });
+
     container.querySelectorAll('.btn-approve').forEach((btn) => {
         btn.addEventListener('click', () => {
             const el = btn as HTMLButtonElement;

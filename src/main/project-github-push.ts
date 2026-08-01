@@ -15,6 +15,7 @@ import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as path from 'path';
 import { IPC } from '../shared/ipc-channels';
+import { gitIdentityArgs } from '../shared/git-config';
 import { createLogger } from '../shared/logger';
 import type { GitHubClient } from '../github/github-client';
 import {
@@ -179,10 +180,9 @@ export async function ensureCommitted(repoPath: string, ctx?: GitStreamContext):
 
     // Identity — required for `git commit` to succeed in environments
     // with no global git config.
-    await runGit(repoPath, ['-c', 'user.email=kageops@local', '-c', 'user.name=KageOps', 'add', '.'], ctx);
+    await runGit(repoPath, [...gitIdentityArgs(), 'add', '.'], ctx);
     await runGit(repoPath, [
-        '-c', 'user.email=kageops@local',
-        '-c', 'user.name=KageOps',
+        ...gitIdentityArgs(),
         'commit',
         '--allow-empty',
         '-m',

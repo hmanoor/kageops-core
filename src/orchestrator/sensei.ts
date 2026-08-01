@@ -36,6 +36,13 @@ import {
 } from './sensei-chat-repository';
 import { type Plan, type PlanGate, openPlanGate } from '../shared/plan-gate';
 import { createRefusal } from '../shared/refusal';
+import {
+    type PhaseAssumption,
+    assumptionGatesEnabled,
+    buildAssumptionPrompt,
+    parseAssumption,
+    warrantsReview,
+} from '../shared/phase-assumption';
 import { TierLimitError } from '../shared/tier-limit-error';
 import { type SetupCopilotGate, noopSetupCopilotGate } from './setup-copilot-gate';
 
@@ -3321,7 +3328,15 @@ export class Sensei {
 
             if (gateStatus.requiresApproval) {
                 // Exit gate is clean — request human approval to advance.
-                await this.gateManager.requestApproval(projectId);
+                // Ask what this phase's work rests on first, so the operator
+                // approves a claim they can disagree with rather than a phase
+                // name. Returns undefined on any failure: a gate must never be
+                // blocked by the assumption call.
+                const assumption = await this.elicitPhaseAssumption(
+                    projectId,
+                    gateStatus.currentPhase,
+                );
+                await this.gateManager.requestApproval(projectId, undefined, undefined, assumption);
 
                 // Notify via comms channels
                 const projectName = await this.getProjectName(projectId);
@@ -3856,6 +3871,26 @@ export class Sensei {
             return;
         }
 
+        // The previous attempt's outcome, as structure rather than prose.
+        // Prose describing a failure invites "try again"; a closed prior
+        // attempt plus a required declaration of what is changing makes a
+        // no-information retry structurally unjustifiable. This is the
+        // agent-facing half of the refusal contract — the human-facing half
+        // is the Refusal raised above once the budget is exhausted.
+        const priorAttempt = finishedCount > 0
+            ? [
+                '',
+                `PRIOR ATTEMPT ${finishedCount} FAILED — that attempt is closed.`,
+                'Repeating it will reproduce the same result. Before writing any',
+                'file, state what you are doing differently, on one line:',
+                'CHANGED: <what is different about this attempt and why the last one failed>',
+                '',
+                'If you cannot name a concrete difference, say so instead of',
+                'guessing — an unchanged retry wastes the remaining budget.',
+                '',
+            ].join('\n')
+            : '';
+
         const violationSummary = violations
             .map((v) => `- ${v.check}: expected "${v.expected}" — ${v.message}`)
             .join('\n');
@@ -3882,7 +3917,8 @@ export class Sensei {
             [
                 projectId,
                 'Fix acceptance violations in index.html',
-                `The acceptance gate found spec-fidelity violations in the produced artifact.\n\n` +
+                `The acceptance gate found spec-fidelity violations in the produced artifact.\n` +
+                `${priorAttempt}\n` +
                 `Violations:\n${violationSummary}\n\n` +
                 `${guidance}\n\n` +
                 `${cssContext}` +

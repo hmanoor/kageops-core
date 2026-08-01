@@ -27,7 +27,7 @@ import { CodeGraphBridge } from '../workspace/code-graph-bridge';
 import { GraphifyBridge } from '../workspace/graphify-bridge';
 import { parseFileBlocks, sanitizeAgentOutput, isLikelyArtifactContent, recoverArtifactFromNarration, sanitizePackageJson, isNoOpFileNote } from './output-parser';
 import { createLogger, Logger } from '../shared/logger';
-import { isGitDisabled } from '../shared/git-config';
+import { isGitDisabled, gitIdentityArgs } from '../shared/git-config';
 import { buildAgentSystemPrompt } from './caveman-mode';
 import {
     VerificationEvidence,
@@ -2122,7 +2122,7 @@ export abstract class AutonautAgent {
         }
         await this.ensureRepoInitialized(repoPath);
         await this.runGit(repoPath, ['add', '-A']);
-        await this.runGit(repoPath, ['commit', '-m', message]);
+        await this.runGit(repoPath, [...gitIdentityArgs(), 'commit', '-m', message]);
     }
 
     /**
@@ -2152,7 +2152,7 @@ export abstract class AutonautAgent {
             const gitDir = path.join(repoPath, '.git');
             if (fs.existsSync(gitDir)) return;
             await this.runGit(repoPath, ['init']);
-            await this.runGit(repoPath, ['commit', '--allow-empty', '-m', 'Initial commit (auto-init)']);
+            await this.runGit(repoPath, [...gitIdentityArgs(), 'commit', '--allow-empty', '-m', 'Initial commit (auto-init)']);
             this.log.info({ repoPath }, 'F-334: auto-initialized git repo');
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);

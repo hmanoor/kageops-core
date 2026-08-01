@@ -3528,6 +3528,68 @@ export class Sensei {
     }
 
     /**
+     * Ask what the phase's work rests on, so the approval card carries a claim
+     * the operator can disagree with instead of a phase name.
+     *
+     * FAIL-OPEN by design. Every failure path returns undefined and the gate is
+     * raised without an assumption. A wrong-premise check that could itself
+     * block the pipeline would be a worse bug than the one it exists to catch.
+     *
+     * Costs one short AI call per gate (~6 per run). Disable with
+     * KAGEOPS_ASSUMPTION_GATES=0.
+     */
+    private async elicitPhaseAssumption(
+        projectId: string,
+        phase: string,
+    ): Promise<PhaseAssumption | undefined> {
+        if (!assumptionGatesEnabled()) return undefined;
+
+        try {
+            const rows = await getMany<{ title: string }>(
+                `SELECT title FROM tasks
+                  WHERE project_id = $1 AND phase = $2 AND status = 'completed'
+                  ORDER BY updated_at DESC
+                  LIMIT 8`,
+                [projectId, phase],
+            );
+            if (rows.length === 0) return undefined;
+
+            const workSummary = rows.map((r) => `- ${r.title}`).join('\n');
+            const response = await this.config.sendPrompt(
+                'You are Sensei, the orchestrator. Reply in exactly the requested '
+                + 'format and nothing else — no preamble, no markdown fences.',
+                buildAssumptionPrompt(phase, workSummary),
+            );
+
+            const assumption = parseAssumption(response, phase);
+            if (assumption === null) {
+                // A garbled claim on a gate is worse than none: it teaches the
+                // operator to click through without reading.
+                log.warn({ projectId, phase }, 'Assumption unparseable — raising gate without one');
+                return undefined;
+            }
+
+            log.info(
+                {
+                    projectId,
+                    phase,
+                    confidence: assumption.confidence,
+                    basis: assumption.basis,
+                    warrantsReview: warrantsReview(assumption),
+                },
+                'Phase assumption elicited',
+            );
+            return assumption;
+        } catch (err) {
+            log.warn(
+                { projectId, phase, err: err instanceof Error ? err.message : String(err) },
+                'Assumption elicitation failed — raising gate without one',
+            );
+            return undefined;
+        }
+    }
+
+    /**
      * Restore HEAD to the best-attempt tag if one exists. Used on
      * retry-cap exhaustion so the operator inherits the least-broken
      * artifact instead of the last attempt's regression.

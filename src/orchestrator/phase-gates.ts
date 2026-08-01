@@ -14,6 +14,7 @@ import { BuildVerificationGate, BuildVerificationResult, BuildStepName } from '.
 import { AcceptanceGate, AcceptanceResult, AcceptanceViolation } from './acceptance-gate';
 import { loadBundles } from '../bundles/bundle-loader';
 import { type Refusal, formatRefusalForHuman } from '../shared/refusal';
+import { type PhaseAssumption, formatAssumptionForHuman, warrantsReview } from '../shared/phase-assumption';
 import { BundleRegistry } from '../bundles/bundle-registry';
 import { parseBundleKey } from '../agents/specialists/forge-bundle-dispatch';
 import type { BundleAcceptanceKind } from '../bundles/types';
@@ -433,7 +434,12 @@ export class PhaseGateManager {
      *                auto-approve MUST refuse these. When omitted, this is
      *                a clean phase-gate pass and auto-approve is safe.
      */
-    async requestApproval(projectId: string, reason?: string, refusal?: Refusal): Promise<void> {
+    async requestApproval(
+        projectId: string,
+        reason?: string,
+        refusal?: Refusal,
+        assumption?: PhaseAssumption,
+    ): Promise<void> {
         const project = await getOne<ProjectPhaseInfo>(
             'SELECT id, phase, trust_level, status FROM projects WHERE id = $1',
             [projectId]
@@ -466,11 +472,16 @@ export class PhaseGateManager {
             [projectId]
         );
 
+        // An assumption makes the gate message a claim the operator can
+        // disagree with, instead of a phase name they rubber-stamp.
+        const assumptionLine = assumption !== undefined
+            ? ` ${formatAssumptionForHuman(assumption)}`
+            : '';
         const message = refusal !== undefined
             ? formatRefusalForHuman(refusal)
             : reason !== undefined
                 ? `Phase "${project.phase}" blocked: ${reason}`
-                : `Phase "${project.phase}" complete. Awaiting human approval to proceed.`;
+                : `Phase "${project.phase}" complete. Awaiting human approval to proceed.${assumptionLine}`;
 
         await this.eventBus.publish('approval.required', {
             projectId,
@@ -484,6 +495,11 @@ export class PhaseGateManager {
                 // (UI verbs, the next planner turn) get the objects rather
                 // than having to re-parse English.
                 ...(refusal !== undefined ? { refusal } : {}),
+                // The claim this phase's work rests on, so the operator is
+                // approving something falsifiable rather than a phase name.
+                ...(assumption !== undefined
+                    ? { assumption, assumptionWarrantsReview: warrantsReview(assumption) }
+                    : {}),
             },
         });
 

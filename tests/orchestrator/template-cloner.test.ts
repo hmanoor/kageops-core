@@ -213,10 +213,25 @@ describe('template-cloner', () => {
             expect(mocks.execSyncFn).toHaveBeenCalledTimes(3);
             expect(mocks.execSyncFn).toHaveBeenNthCalledWith(1, 'git init', { cwd: TARGET, stdio: 'pipe' });
             expect(mocks.execSyncFn).toHaveBeenNthCalledWith(2, 'git add .', { cwd: TARGET, stdio: 'pipe' });
+            // The commit pins the committer identity inline. Without it this
+            // fails outright on a machine with no global git config — which is
+            // how an outside reviewer's local test run broke.
             expect(mocks.execSyncFn).toHaveBeenNthCalledWith(3,
-                'git commit -m "Initial project setup via KageOps"',
+                'git -c user.email=kageops@local -c user.name=KageOps commit -m "Initial project setup via KageOps"',
                 { cwd: TARGET, stdio: 'pipe' }
             );
+        });
+
+        it('commits with an explicit identity rather than inheriting global git config', async () => {
+            setupHappyPath();
+
+            await cloneTemplate(TEMPLATE, TARGET, CONFIG);
+
+            const commitCmd = mocks.execSyncFn.mock.calls[2]?.[0] as string;
+            expect(commitCmd).toContain('-c user.email=');
+            expect(commitCmd).toContain('-c user.name=');
+            // Identity flags must precede the subcommand: `git -c k=v commit`.
+            expect(commitCmd.indexOf('-c')).toBeLessThan(commitCmd.indexOf('commit'));
         });
 
         it('does not throw when git init fails', async () => {

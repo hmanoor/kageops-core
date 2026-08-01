@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { createLogger } from '../shared/logger';
-import { isGitEnabled } from '../shared/git-config';
+import { isGitEnabled, gitIdentityArgs } from '../shared/git-config';
 import { detectSimpleApp } from '../shared/simple-app-detector';
 
 const log = createLogger('WorkspaceManager');
@@ -224,7 +224,10 @@ export class WorkspaceManager {
     private async initGitRepo(targetDir: string): Promise<void> {
         await this.runGit(targetDir, ['init']);
         await this.runGit(targetDir, ['add', '-A']);
-        await this.runGit(targetDir, ['commit', '-m', 'Initial project scaffold']);
+        // Identity is pinned at the invocation: without it this fails outright
+        // on a machine with no global git config, and otherwise attributes
+        // machine-authored commits to the human. See shared/git-config.ts.
+        await this.runGit(targetDir, [...gitIdentityArgs(), 'commit', '-m', 'Initial project scaffold']);
     }
 
     /**
@@ -257,7 +260,7 @@ export class WorkspaceManager {
             await this.runGit(targetDir, ['init']);
             // Empty commit so HEAD is valid — branch checkout / first
             // `git add -A` from agents both rely on a non-empty ref log.
-            await this.runGit(targetDir, ['commit', '--allow-empty', '-m', 'Initial commit (auto-init)']);
+            await this.runGit(targetDir, [...gitIdentityArgs(), 'commit', '--allow-empty', '-m', 'Initial commit (auto-init)']);
             log.info({ targetDir }, 'F-334: auto-initialized git repo in existing workspace');
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
